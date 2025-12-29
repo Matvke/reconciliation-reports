@@ -2,4 +2,5 @@ from django.apps import AppConfig
 
 
 class ActsConfig(AppConfig):
-    name = 'acts'
+    name = "acts"
+    verbose_name = "Акты сверки"

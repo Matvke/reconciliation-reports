@@ -58,7 +58,7 @@ class StoreCreateView(LoginRequiredMixin, CreateView):
     fields = "__all__"
 
     def get_success_url(self):
-        return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
+        return reverse_lazy("store_detail", kwargs={"pk": self.object.pk})
 
 
 class StoreDeleteView(LoginRequiredMixin, DeleteView):
@@ -136,8 +136,21 @@ class SupplyCreateView(LoginRequiredMixin, CreateView):
     model = Supply
     form_class = SupplyForm
 
+    def get_initial(self):
+        initial = super().get_initial()
+        store_id = self.request.GET.get("store")
+
+        if store_id:
+            try:
+                store = Store.objects.get(id=store_id)
+                initial["store"] = store
+            except Store.DoesNotExist:
+                pass
+
+        return initial
+
     def get_success_url(self):
-        return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
+        return reverse_lazy("supply_detail", kwargs={"pk": self.object.pk})
 
 
 class SupplyDeleteView(LoginRequiredMixin, DeleteView):
@@ -168,8 +181,21 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
     model = Transaction
     form_class = TransactionForm
 
+    def get_initial(self):
+        initial = super().get_initial()
+        store_id = self.request.GET.get("store")
+
+        if store_id:
+            try:
+                store = Store.objects.get(id=store_id)
+                initial["store"] = store
+            except Store.DoesNotExist:
+                pass
+
+        return initial
+
     def get_success_url(self):
-        return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
+        return reverse_lazy("transaction_detail", kwargs={"pk": self.object.pk})
 
 
 class TransactionDeleteView(LoginRequiredMixin, DeleteView):

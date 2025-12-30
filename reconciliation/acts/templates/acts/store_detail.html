@@ -13,20 +13,20 @@
             </a>
         </div>
     </div>
-
+            <div class="card-body">
+                <p><a href="{% url 'supply_create' %}?store={{ store.id }}">Создать поставку</a></p>
+                <p><a href="{% url 'transaction_create' %}?store={{ store.id }}">Создать поступление</a></p>
+            </div>
     <div class="card mb-4">
         <div class="card-header bg-light">
             <h5 class="mb-0">Основная информация</h5>
         </div>
         <div class="card-body">
-            <div class="row">
-                {% if store.name %}
-                <div class="col-md-6 mb-3">
-                    <strong>Наименование:</strong>
-                    <p class="mb-0">{{ store.name }}</p>
-                </div>
+            {% for field, value in store.get_fields %}
+                {% if value %}
+                <p><strong>{{ field.verbose_name }}:</strong> {{ value }}</p>
                 {% endif %}
-            </div>
+            {% endfor %}
         </div>
     </div>
 

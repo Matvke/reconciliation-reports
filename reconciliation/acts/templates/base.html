@@ -28,7 +28,7 @@
                     <a class="nav-link" href="{% url 'transaction_list' %}">Поступления</a>
                     <a class="nav-link" href="{% url 'act_list' %}">Акты сверки</a>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-person-circle"></i> {{ user.username }}
                         </a>
                         <form method="post" action="{% url 'logout' %}" class="d-inline">

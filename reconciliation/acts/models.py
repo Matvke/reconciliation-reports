@@ -7,13 +7,20 @@ User = get_user_model()
 
 class Store(models.Model):
     name = models.CharField(max_length=64, verbose_name="Название")
+    address = models.CharField(max_length=264, verbose_name="Адрес", null=True)
+    phone_number = models.CharField(verbose_name="Номер телефона", null=True)
 
     class Meta:
         verbose_name = "магазин"
         verbose_name_plural = "Магазины"
 
     def __str__(self):
-        return self.name
+        if self.address:
+            return f"Магазин {self.name}. Адрес {self.address}."
+        return f"Магазин {self.name}."
+
+    def get_fields(self):
+        return [(field, getattr(self, field.name)) for field in self._meta.fields]
 
 
 class Supply(models.Model):

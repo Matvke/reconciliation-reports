@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Case, DecimalField, F, Sum, Value, When
@@ -71,6 +69,9 @@ class StoreUpdateView(LoginRequiredMixin, UpdateView):
     fields = "__all__"
     success_url = reverse_lazy("stores")
 
+    def get_success_url(self):
+        return reverse_lazy("store_detail", kwargs={"pk": self.object.pk})
+
 
 class StoreDetailView(LoginRequiredMixin, DetailView):
     model = Store
@@ -131,6 +132,9 @@ class SupplyUpdateView(LoginRequiredMixin, UpdateView):
 
     success_url = reverse_lazy("supply_list")
 
+    def get_success_url(self):
+        return reverse_lazy("supply_detail", kwargs={"pk": self.object.pk})
+
 
 class SupplyCreateView(LoginRequiredMixin, CreateView):
     model = Supply
@@ -176,6 +180,9 @@ class TransactionUpdateView(LoginRequiredMixin, UpdateView):
 
     success_url = reverse_lazy("transaction_list")
 
+    def get_success_url(self):
+        return reverse_lazy("transaction_detail", kwargs={"pk": self.object.pk})
+
 
 class TransactionCreateView(LoginRequiredMixin, CreateView):
     model = Transaction
@@ -218,6 +225,9 @@ class ReconiliationActUpdateView(LoginRequiredMixin, UpdateView):
     fields = "__all__"
     success_url = reverse_lazy("act_list")
 
+    def get_success_url(self):
+        return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
+
 
 class ReconiliationActDeleteView(LoginRequiredMixin, DeleteView):
     model = ReconiliationAct
@@ -231,8 +241,7 @@ class ReconiliationActListView(LoginRequiredMixin, ListView):
     paginate_by = 10
 
 
-class ReconciliationActDetailView(LoginRequiredMixin, DetailView):
-    model = ReconiliationAct
+class ReconciliationActViewMixin:
     context_object_name = "act"
 
     def get_context_data(self, **kwargs):
@@ -262,49 +271,26 @@ class ReconciliationActDetailView(LoginRequiredMixin, DetailView):
                 "total_supply": total_supply,
                 "total_transaction": total_transaction,
                 "total_debt": total_debt,
-                "store_count": len(stores_list),
             }
         )
-
         return context
 
 
-class ReconciliationActPrintView(LoginRequiredMixin, DetailView):
+class ReconciliationActDetailView(
+    ReconciliationActViewMixin,
+    LoginRequiredMixin,
+    DetailView,
+):
+    model = ReconiliationAct
+
+
+class ReconciliationActPrintView(
+    ReconciliationActViewMixin,
+    LoginRequiredMixin,
+    DetailView,
+):
     model = ReconiliationAct
     template_name = "acts/reconciliationact_print.html"
-    context_object_name = "act"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        act = self.object
-
-        stores = act.stores.annotate(
-            supply_total=Coalesce(
-                Sum("supply__price"), Value(0, output_field=DecimalField())
-            ),
-            transaction_total=Coalesce(
-                Sum("transaction__price"), Value(0, output_field=DecimalField())
-            ),
-            debt=F("supply_total") - F("transaction_total"),
-        ).order_by("-debt")
-
-        totals = stores.aggregate(
-            total_supply=Sum("supply_total"),
-            total_transaction=Sum("transaction_total"),
-            total_debt=Sum("debt"),
-        )
-
-        context.update(
-            {
-                "stores": stores,
-                "total_supply": totals["total_supply"] or 0,
-                "total_transaction": totals["total_transaction"] or 0,
-                "total_debt": totals["total_debt"] or 0,
-                "current_time": datetime.now(),
-            }
-        )
-
-        return context
 
 
 def register_view(request):

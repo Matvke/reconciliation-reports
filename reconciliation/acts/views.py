@@ -1,7 +1,10 @@
 from datetime import datetime
 
+from django.contrib.auth import get_user_model, login
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Case, DecimalField, F, Sum, Value, When
 from django.db.models.functions import Coalesce
+from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import (
     CreateView,
@@ -12,12 +15,15 @@ from django.views.generic import (
     UpdateView,
 )
 
-from .forms import ReconiliationActForm, SupplyForm, TransactionForm
+from .forms import ReconiliationActForm, RegisterForm, SupplyForm, TransactionForm
 from .models import ReconiliationAct, Store, Supply, Transaction
 
+User = get_user_model()
 
-class HomePage(TemplateView):
+
+class HomePage(LoginRequiredMixin, TemplateView):
     template_name = "pages/index.html"
+    login_url = "/accounts/login/"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -47,7 +53,7 @@ class HomePage(TemplateView):
         return context
 
 
-class StoreCreateView(CreateView):
+class StoreCreateView(LoginRequiredMixin, CreateView):
     model = Store
     fields = "__all__"
 
@@ -55,18 +61,18 @@ class StoreCreateView(CreateView):
         return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
 
 
-class StoreDeleteView(DeleteView):
+class StoreDeleteView(LoginRequiredMixin, DeleteView):
     model = Store
     success_url = reverse_lazy("stores")
 
 
-class StoreUpdateView(UpdateView):
+class StoreUpdateView(LoginRequiredMixin, UpdateView):
     model = Store
     fields = "__all__"
     success_url = reverse_lazy("stores")
 
 
-class StoreDetailView(DetailView):
+class StoreDetailView(LoginRequiredMixin, DetailView):
     model = Store
 
     def get_context_data(self, **kwargs):
@@ -100,33 +106,33 @@ class StoreDetailView(DetailView):
         return context
 
 
-class StoreListView(ListView):
+class StoreListView(LoginRequiredMixin, ListView):
     model = Store
     context_object_name = "stores"
     ordering = "id"
     paginate_by = 10
 
 
-class SupplyListView(ListView):
+class SupplyListView(LoginRequiredMixin, ListView):
     model = Supply
     ordering = "date"
     context_object_name = "supplies"
     paginate_by = 10
 
 
-class SupplyDetailView(DetailView):
+class SupplyDetailView(LoginRequiredMixin, DetailView):
     model = Supply
     context_object_name = "supply"
 
 
-class SupplyUpdateView(UpdateView):
+class SupplyUpdateView(LoginRequiredMixin, UpdateView):
     model = Supply
     fields = ["price", "date", "store"]
 
     success_url = reverse_lazy("supply_list")
 
 
-class SupplyCreateView(CreateView):
+class SupplyCreateView(LoginRequiredMixin, CreateView):
     model = Supply
     form_class = SupplyForm
 
@@ -134,31 +140,31 @@ class SupplyCreateView(CreateView):
         return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
 
 
-class SupplyDeleteView(DeleteView):
+class SupplyDeleteView(LoginRequiredMixin, DeleteView):
     model = Supply
     success_url = reverse_lazy("supply_list")
 
 
-class TransactionListView(ListView):
+class TransactionListView(LoginRequiredMixin, ListView):
     model = Transaction
     ordering = "date"
     context_object_name = "transactions"
     paginate_by = 10
 
 
-class TransactionDetailView(DetailView):
+class TransactionDetailView(LoginRequiredMixin, DetailView):
     model = Transaction
     context_object_name = "transaction"
 
 
-class TransactionUpdateView(UpdateView):
+class TransactionUpdateView(LoginRequiredMixin, UpdateView):
     model = Transaction
     fields = "__all__"
 
     success_url = reverse_lazy("transaction_list")
 
 
-class TransactionCreateView(CreateView):
+class TransactionCreateView(LoginRequiredMixin, CreateView):
     model = Transaction
     form_class = TransactionForm
 
@@ -166,13 +172,13 @@ class TransactionCreateView(CreateView):
         return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
 
 
-class TransactionDeleteView(DeleteView):
+class TransactionDeleteView(LoginRequiredMixin, DeleteView):
     model = Transaction
     success_url = reverse_lazy("transaction_list")
     template_name = "acts/transaction_confirm_delete.html"
 
 
-class ReconiliationActCreateView(CreateView):
+class ReconiliationActCreateView(LoginRequiredMixin, CreateView):
     model = ReconiliationAct
     form_class = ReconiliationActForm
     template_name = "acts/reconiliationact_form.html"
@@ -181,25 +187,25 @@ class ReconiliationActCreateView(CreateView):
         return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
 
 
-class ReconiliationActUpdateView(UpdateView):
+class ReconiliationActUpdateView(LoginRequiredMixin, UpdateView):
     model = ReconiliationAct
     fields = "__all__"
     success_url = reverse_lazy("act_list")
 
 
-class ReconiliationActDeleteView(DeleteView):
+class ReconiliationActDeleteView(LoginRequiredMixin, DeleteView):
     model = ReconiliationAct
     success_url = reverse_lazy("act_list")
 
 
-class ReconiliationActListView(ListView):
+class ReconiliationActListView(LoginRequiredMixin, ListView):
     model = ReconiliationAct
     context_object_name = "acts"
     ordering = "id"
     paginate_by = 10
 
 
-class ReconciliationActDetailView(DetailView):
+class ReconciliationActDetailView(LoginRequiredMixin, DetailView):
     model = ReconiliationAct
     context_object_name = "act"
 
@@ -237,7 +243,7 @@ class ReconciliationActDetailView(DetailView):
         return context
 
 
-class ReconciliationActPrintView(DetailView):
+class ReconciliationActPrintView(LoginRequiredMixin, DetailView):
     model = ReconiliationAct
     template_name = "acts/reconciliationact_print.html"
     context_object_name = "act"
@@ -273,3 +279,16 @@ class ReconciliationActPrintView(DetailView):
         )
 
         return context
+
+
+def register_view(request):
+    if request.method == "POST":
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect("home")
+    else:
+        form = RegisterForm()
+
+    return render(request, "registration/register.html", {"form": form})

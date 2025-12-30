@@ -1,6 +1,10 @@
 from django import forms
+from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import UserCreationForm
 
 from .models import ReconiliationAct, Supply, Transaction
+
+User = get_user_model()
 
 
 class TransactionForm(forms.ModelForm):
@@ -49,3 +53,33 @@ class ReconiliationActForm(forms.ModelForm):
                 }
             ),
         }
+
+
+class RegisterForm(UserCreationForm):
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(
+            attrs={"class": "form-control", "placeholder": "email@example.com"}
+        ),
+    )
+
+    class Meta:
+        model = User
+        fields = [
+            "username",
+            "email",
+            "password1",
+            "password2",
+            "first_name",
+            "last_name",
+        ]
+        widgets = {
+            "username": forms.TextInput(attrs={"class": "form-control"}),
+            "first_name": forms.TextInput(attrs={"class": "form-control"}),
+            "last_name": forms.TextInput(attrs={"class": "form-control"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs["class"] = "form-control"

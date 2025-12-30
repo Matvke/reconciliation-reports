@@ -1,3 +1,4 @@
+import pytz
 from django.contrib.auth import get_user_model
 from django.db import models
 
@@ -20,12 +21,14 @@ class Supply(models.Model):
         primary_key=True,
         max_length=64,
         verbose_name="ID поставки",
-        help_text="Введите уникальный идентификатор поставки",
     )
     price = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Сумма")
     date = models.DateField(verbose_name="Дата")
     store = models.ForeignKey(
-        Store, verbose_name="Магазин получатель поставки", on_delete=models.CASCADE
+        Store,
+        verbose_name="Магазин получатель поставки",
+        on_delete=models.CASCADE,
+        related_name="supply",
     )
 
     class Meta:
@@ -35,12 +38,18 @@ class Supply(models.Model):
     def __str__(self):
         return f"Поставка номер {self.id} от {self.date}"
 
+    def get_fields(self):
+        return [(field, getattr(self, field.name)) for field in self._meta.fields]
+
 
 class Transaction(models.Model):
     price = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Сумма")
-    date = models.DateTimeField(auto_now_add=True, verbose_name="Дата транзакции")
+    date = models.DateField(verbose_name="Дата транзакции")
     store = models.ForeignKey(
-        Store, verbose_name="Магазин плательщик", on_delete=models.CASCADE
+        Store,
+        verbose_name="Магазин плательщик",
+        on_delete=models.CASCADE,
+        related_name="transaction",
     )
 
     class Meta:
@@ -48,4 +57,29 @@ class Transaction(models.Model):
         verbose_name_plural = "Платежи"
 
     def __str__(self):
-        return f"Платеж от {self.date}. Плательщик {self.store}"
+        return f"от {self.date} плательщик {self.store}"
+
+    def get_fields(self):
+        return [(field, getattr(self, field.name)) for field in self._meta.fields]
+
+
+class ReconiliationAct(models.Model):
+    period_start = models.DateField(verbose_name="Дата начала промежутка")
+    period_end = models.DateField(verbose_name="Дата конца промежутка")
+    date = models.DateTimeField(
+        auto_now_add=True, verbose_name="Дата создания акта сверки"
+    )
+    stores = models.ManyToManyField(
+        Store,
+        related_name="reconciliation_acts",
+        verbose_name="Магазины",
+    )
+
+    def __str__(self):
+        moscow_tz = pytz.timezone("Europe/Moscow")
+        moscow_time = self.date.astimezone(moscow_tz)
+        return f"от {moscow_time.strftime('%d.%m.%Y %H:%M')}"
+
+    class Meta:
+        verbose_name = "акт сверки"
+        verbose_name_plural = "Акты сверки"

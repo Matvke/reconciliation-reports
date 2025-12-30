@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h1>Акт сверки №{{ act.number }}</h1>
+
+    {% if stores %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Магазин</th>
+                    <th class="text-end">Общая сумма поставок</th>
+                    <th class="text-end">Общая сумма поступлений</th>
+                    <th class="text-end">Долг/Переплата</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for store in stores %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                        <strong>{{ store.name }}</strong>
+                        <br>
+                        <small class="text-muted">ID: {{ store.id }}</small>
+                    </td>
+                    <td class="text-end">{{ store.supply_total|floatformat:2 }} руб.</td>
+                    <td class="text-end">{{ store.transaction_total|floatformat:2 }} руб.</td>
+                    <td class="text-end">
+                        <span class="{% if store.debt > 0 %}text-danger fw-bold{% elif store.debt < 0 %}text-success{% else %}text-muted{% endif %}">
+                            {{ store.debt|floatformat:2 }} руб.
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot class="table-secondary">
+                <tr>
+                    <td colspan="2" class="text-end fw-bold">ИТОГО:</td>
+                    <td class="text-end fw-bold">{{ total_supply|floatformat:2 }} руб.</td>
+                    <td class="text-end fw-bold">{{ total_transaction|floatformat:2 }} руб.</td>
+                    <td class="text-end fw-bold {% if total_debt > 0 %}text-danger{% elif total_debt < 0 %}text-success{% endif %}">
+                        {{ total_debt|floatformat:2 }} руб.
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-warning">
+        Нет данных о магазинах
+    </div>
+    {% endif %}
+<div class="no-print mt-3">
+    <a href="{% url 'act_print' act.pk %}" target="_blank" class="btn btn-outline-secondary">
+        <i class="bi bi-printer"></i> Версия для печати
+    </a>
+    <button onclick="window.print()" class="btn btn-secondary">
+        <i class="bi bi-printer-fill"></i> Печать текущей страницы
+    </button>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Поступления средств</h1>
+<div class="card mb-3">
+    <div class="card-body">
+        <a href="{% url 'transaction_create' %}">Добавить поступление</a>
+    </div>
+</div>
+
+{% for transaction in transactions %}
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title"><a href="{% url 'transaction_detail' transaction.pk %}">Поступление номер {{ transaction.id }} {{transaction}}</a></h5>
+        
+        <p class="card-text"><a href="{% url 'transaction_update' transaction.pk %}">Изменить</a></p>
+        <p class="card-text"><a href="{% url 'transaction_delete' transaction.pk %}">Удалить</a></p>
+    </div>
+</div>
+{% endfor %}
+
+{% include 'partials/pagination.html' %}
+{% endblock %}

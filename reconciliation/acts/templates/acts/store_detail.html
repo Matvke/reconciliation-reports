@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ store.name }}</h1>
+        <div>
+            <a href="{% url 'store_update' store.pk %}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Редактировать
+            </a>
+            <a href="{% url 'store_delete' store.pk %}" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Удалить
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Основная информация</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% if store.name %}
+                <div class="col-md-6 mb-3">
+                    <strong>Наименование:</strong>
+                    <p class="mb-0">{{ store.name }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Финансовая информация</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 {% if store.debt > 0 %}border-danger{% elif store.debt < 0 %}border-success{% endif %}">
+                        <div class="card-body text-center">
+                            <h6 class="card-title">Общий долг</h6>
+                            <h4 class="card-text {% if store.debt > 0 %}text-danger{% elif store.debt < 0 %}text-success{% endif %}">
+                                {{ debt|default:0|floatformat:2 }} руб.
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <h6 class="card-title">Общие поставки</h6>
+                            <h4 class="card-text text-primary">
+                                {{ supply_total|default:0|floatformat:2 }} руб.
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <h6 class="card-title">Общие поступления</h6>
+                            <h4 class="card-text text-primary">
+                                {{ transaction_total|default:0|floatformat:2 }} руб.
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if store.supply.exists %}
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Поставки</h5>
+        </div>
+        <div class="card-body">
+            <div class="list-group">
+                {% for supply in store.supply.all %}
+                <a href="{% url 'supply_detail' supply.pk %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Поставка №{{ supply.id }}</h6>
+                        <small>На стоимость {{ supply.price }} ₽</small>
+                        <small>{{ supply.date }}</small>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <p></p>
+    {% if store.transaction.exists %}
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Поступления средств</h5>
+        </div>
+        <div class="card-body">
+            <div class="list-group">
+                {% for transaction in store.transaction.all %}
+                <a href="{% url 'transaction_detail' transaction.pk %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Поступление №{{ transaction.id }}</h6>
+                        <small>На стоимость {{ transaction.price }} ₽</small>
+                        <small>{{ transaction.date }}</small>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <p></p>
+    {% if store.reconciliationact_set.exists %}
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Акты сверки</h5>
+        </div>
+        <div class="card-body">
+            <div class="list-group">
+                {% for act in store.reconciliationact_set.all %}
+                <a href="{% url 'act_detail' act.pk %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Акт №{{ act.number }}</h6>
+                        <small>{{ act.date }}</small>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{% url 'stores' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Назад к списку магазинов
+        </a>
+    </div>
+</div>
+{% endblock %}

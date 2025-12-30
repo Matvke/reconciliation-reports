@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Поставки</h1>
+<div class="card mb-3">
+    <div class="card-body">
+        <a href="{% url 'supply_create' %}">Добавить поставку</a>
+    </div>
+</div>
+
+{% for supply in supplies %}
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title"><a href="{% url 'supply_detail' supply.pk %}">Поставка номер {{ supply.id }}</a></h5>
+        
+        <p class="card-text"><a href="{% url 'supply_update' supply.pk %}">Изменить</a></p>
+        <p class="card-text"><a href="{% url 'supply_delete' supply.pk %}">Удалить</a></p>
+    </div>
+</div>
+{% endfor %}
+
+{% include 'partials/pagination.html' %}
+{% endblock %}

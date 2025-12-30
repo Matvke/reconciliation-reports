@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Акт сверки №{{ act.number }}</title>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { font-size: 12pt; }
+            .page-break { page-break-after: always; }
+        }
+        
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            margin: 20px;
+            line-height: 1.4;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 18pt;
+        }
+        
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .info-table th, .info-table td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .info-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        
+        .total {
+            font-weight: bold;
+            font-size: 14pt;
+            margin-top: 20px;
+            text-align: right;
+        }
+        
+        .signatures {
+            margin-top: 100px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .signature-block {
+            width: 40%;
+            text-align: center;
+        }
+        
+        .stamp-place {
+            height: 100px;
+            border-bottom: 1px solid #000;
+            margin-bottom: 10px;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            font-size: 10pt;
+            color: #666;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>АКТ СВЕРКИ ВЗАИМОРАСЧЕТОВ</h1>
+        <p>№ {{ act.id }} от {{ act.date }}</p>
+    </div>
+    
+    <div>
+        <p><strong>Дата составления:</strong> {% now "d.m.Y" %}</p>
+        {% if act.description %}
+        <p><strong>Основание:</strong> {{ act.description }}</p>
+        {% endif %}
+    </div>
+    
+    <h3>Данные по магазинам:</h3>
+    <table class="info-table">
+        <thead>
+            <tr>
+                <th>№</th>
+                <th>Магазин</th>
+                <th>Общая сумма поставок</th>
+                <th>Общая сумма поступлений</th>
+                <th>Долг/Переплата</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for store in stores %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ store.name }}</td>
+                <td>{{ store.supply_total|floatformat:2 }} руб.</td>
+                <td>{{ store.transaction_total|floatformat:2 }} руб.</td>
+                <td>
+                    {% if store.debt > 0 %}
+                    <span style="color: red;">{{ store.debt|floatformat:2 }} руб.</span>
+                    {% elif store.debt < 0 %}
+                    <span style="color: green;">{{ store.debt|floatformat:2 }} руб.</span>
+                    {% else %}
+                    {{ store.debt|floatformat:2 }} руб.
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2"><strong>ИТОГО:</strong></td>
+                <td><strong>{{ total_supply|floatformat:2 }} руб.</strong></td>
+                <td><strong>{{ total_transaction|floatformat:2 }} руб.</strong></td>
+                <td>
+                    <strong>
+                        {% if total_debt > 0 %}
+                        <span style="color: red;">{{ total_debt|floatformat:2 }} руб.</span>
+                        {% elif total_debt < 0 %}
+                        <span style="color: green;">{{ total_debt|floatformat:2 }} руб.</span>
+                        {% else %}
+                        {{ total_debt|floatformat:2 }} руб.
+                        {% endif %}
+                    </strong>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+    
+    <div class="signatures">
+        <div class="signature-block">
+            <p>Поставщик:</p>
+            <div class="stamp-place"></div>
+            <p>_________________ / {{ act.created_by.get_full_name|default:"ФИО" }} /</p>
+            <p>М.П.</p>
+        </div>
+        
+        <div class="signature-block">
+            <p>Покупатель:</p>
+            <div class="stamp-place"></div>
+            <p>_________________ / _________________ /</p>
+            <p>М.П.</p>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Документ сгенерирован {{ current_time|date:"d.m.Y H:i" }}</p>
+        <p>Страница 1 из 1</p>
+    </div>
+    
+    <div class="no-print" style="position: fixed; top: 20px; right: 20px;">
+        <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px;">
+            Печать
+        </button>
+        <button onclick="window.close()" style="padding: 10px 20px; font-size: 16px; margin-left: 10px;">
+            Закрыть
+        </button>
+    </div>
+</body>
+</html>

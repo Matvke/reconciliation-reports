@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Магазины</h1>
+<div class="card mb-3">
+    <div class="card-body">
+        <a href="{% url 'store_create' %}">Добавить магазин</a>
+    </div>
+</div>
+
+{% for store in stores %}
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title"><a href="{% url 'store_detail' store.pk %}">{{ store.name }}</a></h5>
+        
+        <p class="card-text"><a href="{% url 'store_update' store.pk %}">Изменить</a></p>
+        <p class="card-text"><a href="{% url 'store_delete' store.pk %}">Удалить</a></p>
+    </div>
+</div>
+{% endfor %}
+
+{% include 'partials/pagination.html' %}
+{% endblock %}

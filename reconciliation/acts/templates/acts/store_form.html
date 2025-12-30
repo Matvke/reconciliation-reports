@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>
+    {% if object %}
+        Редактирование магазина "{{ object.name }}"
+    {% else %}
+        Создание нового магазина
+    {% endif %}
+</h2>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    {{ form.as_p }}
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        {% if object %}Сохранить{% else %}Создать{% endif %}
+                    </button>
+                    <a href="{% url 'stores' %}" class="btn btn-secondary">Отмена</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

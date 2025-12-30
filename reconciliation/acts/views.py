@@ -1,3 +1,275 @@
-from django.shortcuts import render
+from datetime import datetime
 
-# Create your views here.
+from django.db.models import Case, DecimalField, F, Sum, Value, When
+from django.db.models.functions import Coalesce
+from django.urls import reverse_lazy
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    ListView,
+    TemplateView,
+    UpdateView,
+)
+
+from .forms import ReconiliationActForm, SupplyForm, TransactionForm
+from .models import ReconiliationAct, Store, Supply, Transaction
+
+
+class HomePage(TemplateView):
+    template_name = "pages/index.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        qs = Store.objects.annotate(
+            supply_total=Coalesce(
+                Sum("supply__price"), Value(0, output_field=DecimalField())
+            ),
+            transaction_total=Coalesce(
+                Sum("transaction__price"), Value(0, output_field=DecimalField())
+            ),
+        ).annotate(
+            debt=Case(
+                When(
+                    supply_total__gt=F("transaction_total"),
+                    then=F("supply_total") - F("transaction_total"),
+                ),
+                default=Value(0),
+                output_field=DecimalField(),
+            )
+        )
+        total_debt = qs.aggregate(
+            total=Sum(F("supply_total") - F("transaction_total"))
+        )["total"]
+        context["stores"] = qs
+        context["store_count"] = len(context["stores"])
+        context["total_debt"] = total_debt if total_debt > 0 else 0
+        return context
+
+
+class StoreCreateView(CreateView):
+    model = Store
+    fields = "__all__"
+
+    def get_success_url(self):
+        return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
+
+
+class StoreDeleteView(DeleteView):
+    model = Store
+    success_url = reverse_lazy("stores")
+
+
+class StoreUpdateView(UpdateView):
+    model = Store
+    fields = "__all__"
+    success_url = reverse_lazy("stores")
+
+
+class StoreDetailView(DetailView):
+    model = Store
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        store_with_stats = (
+            Store.objects.filter(pk=self.object.pk)
+            .annotate(
+                supply_total=Coalesce(
+                    Sum("supply__price"), Value(0, output_field=DecimalField())
+                ),
+                transaction_total=Coalesce(
+                    Sum("transaction__price"), Value(0, output_field=DecimalField())
+                ),
+            )
+            .annotate(debt=F("supply_total") - F("transaction_total"))
+            .first()
+        )
+
+        context.update(
+            {
+                "debt": store_with_stats.debt if store_with_stats.debt > 0 else 0,
+                "supply_total": store_with_stats.supply_total
+                if store_with_stats
+                else 0,
+                "transaction_total": store_with_stats.transaction_total
+                if store_with_stats
+                else 0,
+            }
+        )
+        return context
+
+
+class StoreListView(ListView):
+    model = Store
+    context_object_name = "stores"
+    ordering = "id"
+    paginate_by = 10
+
+
+class SupplyListView(ListView):
+    model = Supply
+    ordering = "date"
+    context_object_name = "supplies"
+    paginate_by = 10
+
+
+class SupplyDetailView(DetailView):
+    model = Supply
+    context_object_name = "supply"
+
+
+class SupplyUpdateView(UpdateView):
+    model = Supply
+    fields = ["price", "date", "store"]
+
+    success_url = reverse_lazy("supply_list")
+
+
+class SupplyCreateView(CreateView):
+    model = Supply
+    form_class = SupplyForm
+
+    def get_success_url(self):
+        return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
+
+
+class SupplyDeleteView(DeleteView):
+    model = Supply
+    success_url = reverse_lazy("supply_list")
+
+
+class TransactionListView(ListView):
+    model = Transaction
+    ordering = "date"
+    context_object_name = "transactions"
+    paginate_by = 10
+
+
+class TransactionDetailView(DetailView):
+    model = Transaction
+    context_object_name = "transaction"
+
+
+class TransactionUpdateView(UpdateView):
+    model = Transaction
+    fields = "__all__"
+
+    success_url = reverse_lazy("transaction_list")
+
+
+class TransactionCreateView(CreateView):
+    model = Transaction
+    form_class = TransactionForm
+
+    def get_success_url(self):
+        return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
+
+
+class TransactionDeleteView(DeleteView):
+    model = Transaction
+    success_url = reverse_lazy("transaction_list")
+    template_name = "acts/transaction_confirm_delete.html"
+
+
+class ReconiliationActCreateView(CreateView):
+    model = ReconiliationAct
+    form_class = ReconiliationActForm
+    template_name = "acts/reconiliationact_form.html"
+
+    def get_success_url(self):
+        return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
+
+
+class ReconiliationActUpdateView(UpdateView):
+    model = ReconiliationAct
+    fields = "__all__"
+    success_url = reverse_lazy("act_list")
+
+
+class ReconiliationActDeleteView(DeleteView):
+    model = ReconiliationAct
+    success_url = reverse_lazy("act_list")
+
+
+class ReconiliationActListView(ListView):
+    model = ReconiliationAct
+    context_object_name = "acts"
+    ordering = "id"
+    paginate_by = 10
+
+
+class ReconciliationActDetailView(DetailView):
+    model = ReconiliationAct
+    context_object_name = "act"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        stores_list = list(
+            Store.objects.annotate(
+                supply_total=Coalesce(
+                    Sum("supply__price"), Value(0, output_field=DecimalField())
+                ),
+                transaction_total=Coalesce(
+                    Sum("transaction__price"), Value(0, output_field=DecimalField())
+                ),
+            )
+            .annotate(debt=F("supply_total") - F("transaction_total"))
+            .values("id", "name", "supply_total", "transaction_total", "debt")
+            .order_by("-debt")
+        )
+
+        total_supply = sum(store["supply_total"] for store in stores_list)
+        total_transaction = sum(store["transaction_total"] for store in stores_list)
+        total_debt = sum(store["debt"] for store in stores_list)
+
+        context.update(
+            {
+                "stores": stores_list,
+                "total_supply": total_supply,
+                "total_transaction": total_transaction,
+                "total_debt": total_debt,
+                "store_count": len(stores_list),
+            }
+        )
+
+        return context
+
+
+class ReconciliationActPrintView(DetailView):
+    model = ReconiliationAct
+    template_name = "acts/reconciliationact_print.html"
+    context_object_name = "act"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        act = self.object
+
+        stores = act.stores.annotate(
+            supply_total=Coalesce(
+                Sum("supply__price"), Value(0, output_field=DecimalField())
+            ),
+            transaction_total=Coalesce(
+                Sum("transaction__price"), Value(0, output_field=DecimalField())
+            ),
+            debt=F("supply_total") - F("transaction_total"),
+        ).order_by("-debt")
+
+        totals = stores.aggregate(
+            total_supply=Sum("supply_total"),
+            total_transaction=Sum("transaction_total"),
+            total_debt=Sum("debt"),
+        )
+
+        context.update(
+            {
+                "stores": stores,
+                "total_supply": totals["total_supply"] or 0,
+                "total_transaction": totals["total_transaction"] or 0,
+                "total_debt": totals["total_debt"] or 0,
+                "current_time": datetime.now(),
+            }
+        )
+
+        return context

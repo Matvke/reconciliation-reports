@@ -2,12 +2,12 @@ from django.urls import path
 
 from .views import (
     HomePage,
+    ReconciliationActCreateView,
+    ReconciliationActDeleteView,
     ReconciliationActDetailView,
+    ReconciliationActListView,
     ReconciliationActPrintView,
-    ReconiliationActCreateView,
-    ReconiliationActDeleteView,
-    ReconiliationActListView,
-    ReconiliationActUpdateView,
+    ReconciliationActUpdateView,
     StoreCreateView,
     StoreDeleteView,
     StoreDetailView,
@@ -32,15 +32,15 @@ urlpatterns = [
     path("store_update/<int:pk>/", StoreUpdateView.as_view(), name="store_update"),
     path("store/<int:pk>/", StoreDetailView.as_view(), name="store_detail"),
     path("store_delete/<int:pk>/", StoreDeleteView.as_view(), name="store_delete"),
-    path("act_create", ReconiliationActCreateView.as_view(), name="act_create"),
+    path("act_create", ReconciliationActCreateView.as_view(), name="act_create"),
     path("act/<int:pk>/", ReconciliationActDetailView.as_view(), name="act_detail"),
     path(
-        "act_delete/<int:pk>/", ReconiliationActDeleteView.as_view(), name="act_delete"
+        "act_delete/<int:pk>/", ReconciliationActDeleteView.as_view(), name="act_delete"
     ),
     path(
-        "act_update/<int:pk>/", ReconiliationActUpdateView.as_view(), name="act_update"
+        "act_update/<int:pk>/", ReconciliationActUpdateView.as_view(), name="act_update"
     ),
-    path("act_list", ReconiliationActListView.as_view(), name="act_list"),
+    path("act_list", ReconciliationActListView.as_view(), name="act_list"),
     path("act/<int:pk>/print/", ReconciliationActPrintView.as_view(), name="act_print"),
     path("supplies", SupplyListView.as_view(), name="supply_list"),
     path("supply_detail/<int:pk>/", SupplyDetailView.as_view(), name="supply_detail"),

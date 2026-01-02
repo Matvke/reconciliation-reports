@@ -1,8 +1,7 @@
-from django.contrib.auth import get_user_model, login
+from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Case, DecimalField, F, Sum, Value, When
 from django.db.models.functions import Coalesce
-from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import (
     CreateView,
@@ -13,8 +12,8 @@ from django.views.generic import (
     UpdateView,
 )
 
-from .forms import ReconiliationActForm, RegisterForm, SupplyForm, TransactionForm
-from .models import ReconiliationAct, Store, Supply, Transaction
+from .forms import ReconciliationActForm, StoreForm, SupplyForm, TransactionForm
+from .models import ReconciliationAct, Store, Supply, Transaction
 
 User = get_user_model()
 
@@ -47,13 +46,13 @@ class HomePage(LoginRequiredMixin, TemplateView):
         )["total"]
         context["stores"] = qs
         context["store_count"] = len(context["stores"])
-        context["total_debt"] = total_debt if total_debt > 0 else 0
+        context["total_debt"] = total_debt
         return context
 
 
 class StoreCreateView(LoginRequiredMixin, CreateView):
     model = Store
-    fields = "__all__"
+    form_class = StoreForm
 
     def get_success_url(self):
         return reverse_lazy("store_detail", kwargs={"pk": self.object.pk})
@@ -66,7 +65,7 @@ class StoreDeleteView(LoginRequiredMixin, DeleteView):
 
 class StoreUpdateView(LoginRequiredMixin, UpdateView):
     model = Store
-    fields = "__all__"
+    form_class = StoreForm
     success_url = reverse_lazy("stores")
 
     def get_success_url(self):
@@ -128,7 +127,7 @@ class SupplyDetailView(LoginRequiredMixin, DetailView):
 
 class SupplyUpdateView(LoginRequiredMixin, UpdateView):
     model = Supply
-    fields = ["price", "date", "store"]
+    form_class = SupplyForm
 
     success_url = reverse_lazy("supply_list")
 
@@ -211,17 +210,17 @@ class TransactionDeleteView(LoginRequiredMixin, DeleteView):
     template_name = "acts/transaction_confirm_delete.html"
 
 
-class ReconiliationActCreateView(LoginRequiredMixin, CreateView):
-    model = ReconiliationAct
-    form_class = ReconiliationActForm
-    template_name = "acts/reconiliationact_form.html"
+class ReconciliationActCreateView(LoginRequiredMixin, CreateView):
+    model = ReconciliationAct
+    form_class = ReconciliationActForm
+    template_name = "acts/reconciliationact_form.html"
 
     def get_success_url(self):
         return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
 
 
-class ReconiliationActUpdateView(LoginRequiredMixin, UpdateView):
-    model = ReconiliationAct
+class ReconciliationActUpdateView(LoginRequiredMixin, UpdateView):
+    model = ReconciliationAct
     fields = "__all__"
     success_url = reverse_lazy("act_list")
 
@@ -229,13 +228,13 @@ class ReconiliationActUpdateView(LoginRequiredMixin, UpdateView):
         return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
 
 
-class ReconiliationActDeleteView(LoginRequiredMixin, DeleteView):
-    model = ReconiliationAct
+class ReconciliationActDeleteView(LoginRequiredMixin, DeleteView):
+    model = ReconciliationAct
     success_url = reverse_lazy("act_list")
 
 
-class ReconiliationActListView(LoginRequiredMixin, ListView):
-    model = ReconiliationAct
+class ReconciliationActListView(LoginRequiredMixin, ListView):
+    model = ReconciliationAct
     context_object_name = "acts"
     ordering = "id"
     paginate_by = 10
@@ -281,7 +280,7 @@ class ReconciliationActDetailView(
     LoginRequiredMixin,
     DetailView,
 ):
-    model = ReconiliationAct
+    model = ReconciliationAct
 
 
 class ReconciliationActPrintView(
@@ -289,18 +288,5 @@ class ReconciliationActPrintView(
     LoginRequiredMixin,
     DetailView,
 ):
-    model = ReconiliationAct
+    model = ReconciliationAct
     template_name = "acts/reconciliationact_print.html"
-
-
-def register_view(request):
-    if request.method == "POST":
-        form = RegisterForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect("home")
-    else:
-        form = RegisterForm()
-
-    return render(request, "registration/register.html", {"form": form})

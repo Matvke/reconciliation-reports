@@ -7,8 +7,12 @@ User = get_user_model()
 
 class Store(models.Model):
     name = models.CharField(max_length=64, verbose_name="Название")
-    address = models.CharField(max_length=264, verbose_name="Адрес", null=True)
-    phone_number = models.CharField(verbose_name="Номер телефона", null=True)
+    address = models.CharField(
+        max_length=264, verbose_name="Адрес", null=True, blank=True
+    )
+    phone_number = models.CharField(
+        verbose_name="Номер телефона", null=True, blank=True
+    )
 
     class Meta:
         verbose_name = "магазин"
@@ -70,7 +74,7 @@ class Transaction(models.Model):
         return [(field, getattr(self, field.name)) for field in self._meta.fields]
 
 
-class ReconiliationAct(models.Model):
+class ReconciliationAct(models.Model):
     period_start = models.DateField(verbose_name="Дата начала промежутка")
     period_end = models.DateField(verbose_name="Дата конца промежутка")
     date = models.DateTimeField(

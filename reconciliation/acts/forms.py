@@ -1,10 +1,33 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import UserCreationForm
 
-from .models import ReconiliationAct, Supply, Transaction
+from .models import ReconciliationAct, Store, Supply, Transaction
 
 User = get_user_model()
+
+
+class StoreForm(forms.ModelForm):
+    class Meta:
+        model = Store
+        fields = ["name", "address", "phone_number"]
+        widgets = {
+            "name": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Обязательно"}
+            ),
+            "address": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                    "placeholder": "Не обязательно",
+                }
+            ),
+            "phone_number": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "+7 (XXX) XXX-XX-XX (не обязательно)",
+                }
+            ),
+        }
 
 
 class TransactionForm(forms.ModelForm):
@@ -16,6 +39,18 @@ class TransactionForm(forms.ModelForm):
                 attrs={
                     "type": "date",
                     "class": "form-control",
+                }
+            ),
+            "price": forms.NumberInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "0.00",
+                    "step": "0.01",
+                }
+            ),
+            "store": forms.Select(
+                attrs={
+                    "class": "form-control form-select",
                 }
             ),
         }
@@ -32,12 +67,24 @@ class SupplyForm(forms.ModelForm):
                     "class": "form-control",
                 }
             ),
+            "price": forms.NumberInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "0.00",
+                    "step": "0.01",
+                }
+            ),
+            "store": forms.Select(
+                attrs={
+                    "class": "form-control form-select",
+                }
+            ),
         }
 
 
-class ReconiliationActForm(forms.ModelForm):
+class ReconciliationActForm(forms.ModelForm):
     class Meta:
-        model = ReconiliationAct
+        model = ReconciliationAct
         fields = "__all__"
         widgets = {
             "period_start": forms.DateInput(
@@ -53,33 +100,3 @@ class ReconiliationActForm(forms.ModelForm):
                 }
             ),
         }
-
-
-class RegisterForm(UserCreationForm):
-    email = forms.EmailField(
-        required=True,
-        widget=forms.EmailInput(
-            attrs={"class": "form-control", "placeholder": "email@example.com"}
-        ),
-    )
-
-    class Meta:
-        model = User
-        fields = [
-            "username",
-            "email",
-            "password1",
-            "password2",
-            "first_name",
-            "last_name",
-        ]
-        widgets = {
-            "username": forms.TextInput(attrs={"class": "form-control"}),
-            "first_name": forms.TextInput(attrs={"class": "form-control"}),
-            "last_name": forms.TextInput(attrs={"class": "form-control"}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.widget.attrs["class"] = "form-control"

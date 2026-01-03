@@ -327,6 +327,10 @@ class ActListView(LoginRequiredMixin, ListView):
 
 
 class ActViewMixin:
+    model = Act
+    template_name = "act_detail.html"
+    context_object_name = "act"
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         act = self.get_object()
@@ -377,26 +381,43 @@ class ActViewMixin:
                 balance -= event["transaction_amount"]
             event["balance"] = balance
 
-        total_supply = supplies.aggregate(
-            total=Coalesce(Sum("price"), 0, output_field=DecimalField())
-        )["total"]
+        total_supply = (
+            supplies.aggregate(
+                total=Coalesce(Sum("price"), 0, output_field=DecimalField())
+            )["total"]
+            or 0
+        )
 
-        total_transaction = transactions.aggregate(
-            total=Coalesce(Sum("price"), 0, output_field=DecimalField())
-        )["total"]
+        total_transaction = (
+            transactions.aggregate(
+                total=Coalesce(Sum("price"), 0, output_field=DecimalField())
+            )["total"]
+            or 0
+        )
 
-        balance_before = (
+        supply_before = (
             Supply.objects.filter(store=act.store, date__lt=act.period_start).aggregate(
                 total=Coalesce(Sum("price"), 0, output_field=DecimalField())
             )["total"]
-            - Transaction.objects.filter(
+            or 0
+        )
+
+        transaction_before = (
+            Transaction.objects.filter(
                 store=act.store, date__lt=act.period_start
             ).aggregate(total=Coalesce(Sum("price"), 0, output_field=DecimalField()))[
                 "total"
             ]
+            or 0
         )
 
+        balance_before = supply_before - transaction_before
+
         balance_after = balance_before + total_supply - total_transaction
+
+        debt = max(balance_after, 0)
+
+        overpayment = abs(min(balance_after, 0))
 
         context.update(
             {
@@ -405,6 +426,8 @@ class ActViewMixin:
                 "total_transaction": total_transaction,
                 "balance_before": balance_before,
                 "balance_after": balance_after,
+                "debt": debt,
+                "overpayment": overpayment,
                 "store": act.store,
             }
         )

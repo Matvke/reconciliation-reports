@@ -13,15 +13,14 @@ class Store(models.Model):
     phone_number = models.CharField(
         verbose_name="Номер телефона", null=True, blank=True
     )
+    notes = models.CharField(verbose_name="Заметки", null=True, blank=True)
 
     class Meta:
         verbose_name = "магазин"
         verbose_name_plural = "Магазины"
 
     def __str__(self):
-        if self.address:
-            return f"Магазин {self.name}. Адрес {self.address}."
-        return f"Магазин {self.name}."
+        return self.name
 
     def get_fields(self):
         return [(field, getattr(self, field.name)) for field in self._meta.fields]

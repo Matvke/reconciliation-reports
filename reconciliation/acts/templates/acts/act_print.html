@@ -70,7 +70,23 @@
     </table>
     
     <div class="mt-4">
-        <p><strong>Примечание:</strong> Положительный баланс - задолженность магазина, отрицательный - переплата.</p>
+<div class="mt-4">
+    <p>Таким образом, на {{ act.period_end|date:"d.m.Y" }}:</p>
+    
+    {% if debt > 0 %}
+        <div class="alert alert-danger">
+            <p>Задолженность "{{ store.name }}" составляет: {{ debt|floatformat:2 }} руб.</p>
+        </div>
+    {% elif overpayment > 0 %}
+        <div class="alert alert-success">
+            <p>Переплата "{{ store.name }}" составляет: {{ overpayment|floatformat:2 }} руб.</p>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <p>Расчеты сбалансированы: 0.00 руб.</p>
+        </div>
+    {% endif %}
+    
     </div>
         <div class="no-print" style="position: fixed; top: 20px; right: 20px;">
         <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px;">

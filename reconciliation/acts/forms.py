@@ -9,7 +9,7 @@ User = get_user_model()
 class StoreForm(forms.ModelForm):
     class Meta:
         model = Store
-        fields = ["name", "address", "phone_number"]
+        fields = ["name", "address", "phone_number", "notes"]
         widgets = {
             "name": forms.TextInput(
                 attrs={"class": "form-control", "placeholder": "Обязательно"}
@@ -26,6 +26,9 @@ class StoreForm(forms.ModelForm):
                     "class": "form-control",
                     "placeholder": "+7 (XXX) XXX-XX-XX (не обязательно)",
                 }
+            ),
+            "notes": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "не обязательно"}
             ),
         }
 

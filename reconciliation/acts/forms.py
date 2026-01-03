@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 
-from .models import ReconciliationAct, Store, Supply, Transaction
+from .models import Store, Summary, Supply, Transaction
 
 User = get_user_model()
 
@@ -59,8 +59,11 @@ class TransactionForm(forms.ModelForm):
 class SupplyForm(forms.ModelForm):
     class Meta:
         model = Supply
-        fields = ["date", "price", "store"]
+        fields = ["id", "date", "price", "store"]
         widgets = {
+            "id": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Номер поставки"}
+            ),
             "date": forms.DateInput(
                 attrs={
                     "type": "date",
@@ -82,9 +85,9 @@ class SupplyForm(forms.ModelForm):
         }
 
 
-class ReconciliationActForm(forms.ModelForm):
+class SummaryForm(forms.ModelForm):
     class Meta:
-        model = ReconciliationAct
+        model = Summary
         fields = "__all__"
         widgets = {
             "period_start": forms.DateInput(

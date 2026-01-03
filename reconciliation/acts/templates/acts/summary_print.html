@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Акт сверки №{{ act.number }}</title>
+    <title>Сводка №{{ summary.number }}</title>
     <style>
         @media print {
             .no-print { display: none !important; }
@@ -80,14 +80,14 @@
 </head>
 <body>
     <div class="header">
-        <h1>АКТ СВЕРКИ ВЗАИМОРАСЧЕТОВ</h1>
-        <p>№ {{ act.id }} от {{ act.date }}</p>
+        <h1>СВОДКА</h1>
+        <p>№ {{ summary.id }} от {{ summary.date }}</p>
     </div>
     
     <div>
         <p><strong>Дата составления:</strong> {% now "d.m.Y" %}</p>
-        {% if act.description %}
-        <p><strong>Основание:</strong> {{ act.description }}</p>
+        {% if summary.description %}
+        <p><strong>Основание:</strong> {{ summary.description }}</p>
         {% endif %}
     </div>
     
@@ -145,7 +145,7 @@
         <div class="signature-block">
             <p>Поставщик:</p>
             <div class="stamp-place"></div>
-            <p>_________________ / {{ act.created_by.get_full_name|default:"ФИО" }} /</p>
+            <p>_________________ / {{ summary.created_by.get_full_name|default:"ФИО" }} /</p>
             <p>М.П.</p>
         </div>
         

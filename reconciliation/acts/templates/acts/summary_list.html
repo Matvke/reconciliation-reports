@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Сводки</h1>
+<div class="card mb-3">
+    <div class="card-body">
+        <a href="{% url 'summary_create' %}">Создать акт сверки</a>
+    </div>
+</div>
+
+{% for summary in summaries %}
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title"><a href="{% url 'summary_detail' summary.pk %}">Сводка номер {{ summary.id }} {{summary}}</a></h5>
+        
+        <p class="card-text"><a href="{% url 'summary_update' summary.pk %}">Изменить</a></p>
+        <p class="card-text"><a href="{% url 'summary_delete' summary.pk %}">Удалить</a></p>
+    </div>
+</div>
+{% endfor %}
+
+{% include 'partials/pagination.html' %}
+{% endblock %}

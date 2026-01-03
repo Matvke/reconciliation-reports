@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Case, DecimalField, F, Sum, Value, When
+from django.db.models import DecimalField, F, Sum, Value
 from django.db.models.functions import Coalesce
 from django.urls import reverse_lazy
 from django.views.generic import (
@@ -12,8 +12,8 @@ from django.views.generic import (
     UpdateView,
 )
 
-from .forms import ReconciliationActForm, StoreForm, SupplyForm, TransactionForm
-from .models import ReconciliationAct, Store, Supply, Transaction
+from .forms import StoreForm, SummaryForm, SupplyForm, TransactionForm
+from .models import Store, Summary, Supply, Transaction
 
 User = get_user_model()
 
@@ -31,16 +31,7 @@ class HomePage(LoginRequiredMixin, TemplateView):
             transaction_total=Coalesce(
                 Sum("transaction__price"), Value(0, output_field=DecimalField())
             ),
-        ).annotate(
-            debt=Case(
-                When(
-                    supply_total__gt=F("transaction_total"),
-                    then=F("supply_total") - F("transaction_total"),
-                ),
-                default=Value(0),
-                output_field=DecimalField(),
-            )
-        )
+        ).annotate(debt=F("supply_total") - F("transaction_total"))
         total_debt = qs.aggregate(
             total=Sum(F("supply_total") - F("transaction_total"))
         )["total"]
@@ -94,7 +85,7 @@ class StoreDetailView(LoginRequiredMixin, DetailView):
 
         context.update(
             {
-                "debt": store_with_stats.debt if store_with_stats.debt > 0 else 0,
+                "debt": store_with_stats.debt,
                 "supply_total": store_with_stats.supply_total
                 if store_with_stats
                 else 0,
@@ -153,7 +144,7 @@ class SupplyCreateView(LoginRequiredMixin, CreateView):
         return initial
 
     def get_success_url(self):
-        return reverse_lazy("supply_detail", kwargs={"pk": self.object.pk})
+        return reverse_lazy("supply_detail", kwargs={"pk": self.object.id})
 
 
 class SupplyDeleteView(LoginRequiredMixin, DeleteView):
@@ -210,38 +201,38 @@ class TransactionDeleteView(LoginRequiredMixin, DeleteView):
     template_name = "acts/transaction_confirm_delete.html"
 
 
-class ReconciliationActCreateView(LoginRequiredMixin, CreateView):
-    model = ReconciliationAct
-    form_class = ReconciliationActForm
-    template_name = "acts/reconciliationact_form.html"
+class SummaryCreateView(LoginRequiredMixin, CreateView):
+    model = Summary
+    form_class = SummaryForm
+    template_name = "acts/summary_form.html"
 
     def get_success_url(self):
-        return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
+        return reverse_lazy("summary_detail", kwargs={"pk": self.object.pk})
 
 
-class ReconciliationActUpdateView(LoginRequiredMixin, UpdateView):
-    model = ReconciliationAct
+class SummaryUpdateView(LoginRequiredMixin, UpdateView):
+    model = Summary
     fields = "__all__"
-    success_url = reverse_lazy("act_list")
+    success_url = reverse_lazy("summary_list")
 
     def get_success_url(self):
-        return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
+        return reverse_lazy("summary_detail", kwargs={"pk": self.object.pk})
 
 
-class ReconciliationActDeleteView(LoginRequiredMixin, DeleteView):
-    model = ReconciliationAct
-    success_url = reverse_lazy("act_list")
+class SummaryDeleteView(LoginRequiredMixin, DeleteView):
+    model = Summary
+    success_url = reverse_lazy("summary_list")
 
 
-class ReconciliationActListView(LoginRequiredMixin, ListView):
-    model = ReconciliationAct
-    context_object_name = "acts"
+class SummaryListView(LoginRequiredMixin, ListView):
+    model = Summary
+    context_object_name = "summaries"
     ordering = "id"
     paginate_by = 10
 
 
-class ReconciliationActViewMixin:
-    context_object_name = "act"
+class SummaryViewMixin:
+    context_object_name = "summary"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -275,18 +266,18 @@ class ReconciliationActViewMixin:
         return context
 
 
-class ReconciliationActDetailView(
-    ReconciliationActViewMixin,
+class SummaryDetailView(
+    SummaryViewMixin,
     LoginRequiredMixin,
     DetailView,
 ):
-    model = ReconciliationAct
+    model = Summary
 
 
-class ReconciliationActPrintView(
-    ReconciliationActViewMixin,
+class SummaryPrintView(
+    SummaryViewMixin,
     LoginRequiredMixin,
     DetailView,
 ):
-    model = ReconciliationAct
-    template_name = "acts/reconciliationact_print.html"
+    model = Summary
+    template_name = "acts/summary_print.html"

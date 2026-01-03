@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container mt-4">
-    <h1>Акт сверки №{{ act.number }}</h1>
+    <h1>Сводка №{{ summary.number }}</h1>
 
     {% if stores %}
     <div class="table-responsive">
@@ -52,7 +52,7 @@
     </div>
     {% endif %}
 <div class="no-print mt-3">
-    <a href="{% url 'act_print' act.pk %}" target="_blank" class="btn btn-outline-secondary">
+    <a href="{% url 'summary_print' summary.pk %}" target="_blank" class="btn btn-outline-secondary">
         <i class="bi bi-printer"></i> Версия для печати
     </a>
     <button onclick="window.print()" class="btn btn-secondary">

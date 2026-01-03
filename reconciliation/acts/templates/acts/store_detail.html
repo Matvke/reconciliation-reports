@@ -114,18 +114,18 @@
     </div>
     {% endif %}
     <p></p>
-    {% if store.reconciliationact_set.exists %}
+    {% if store.summary_set.exists %}
     <div class="card">
         <div class="card-header bg-light">
             <h5 class="mb-0">Акты сверки</h5>
         </div>
         <div class="card-body">
             <div class="list-group">
-                {% for act in store.reconciliationact_set.all %}
-                <a href="{% url 'act_detail' act.pk %}" class="list-group-item list-group-item-action">
+                {% for summary in store.summary_set.all %}
+                <a href="{% url 'summary_detail' summary.pk %}" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
-                        <h6 class="mb-1">Акт №{{ act.number }}</h6>
-                        <small>{{ act.date }}</small>
+                        <h6 class="mb-1">Акт №{{ summary.number }}</h6>
+                        <small>{{ summary.date }}</small>
                     </div>
                 </a>
                 {% endfor %}

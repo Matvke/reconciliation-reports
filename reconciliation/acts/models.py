@@ -74,15 +74,13 @@ class Transaction(models.Model):
         return [(field, getattr(self, field.name)) for field in self._meta.fields]
 
 
-class ReconciliationAct(models.Model):
+class Summary(models.Model):
     period_start = models.DateField(verbose_name="Дата начала промежутка")
     period_end = models.DateField(verbose_name="Дата конца промежутка")
-    date = models.DateTimeField(
-        auto_now_add=True, verbose_name="Дата создания акта сверки"
-    )
+    date = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания сводки")
     stores = models.ManyToManyField(
         Store,
-        related_name="reconciliation_acts",
+        related_name="summaries",
         verbose_name="Магазины",
     )
 
@@ -92,5 +90,5 @@ class ReconciliationAct(models.Model):
         return f"от {moscow_time.strftime('%d.%m.%Y %H:%M')}"
 
     class Meta:
-        verbose_name = "акт сверки"
-        verbose_name_plural = "Акты сверки"
+        verbose_name = "сводка"
+        verbose_name_plural = "Сводки"

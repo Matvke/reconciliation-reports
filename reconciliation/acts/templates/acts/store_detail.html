@@ -16,6 +16,7 @@
             <div class="card-body">
                 <p><a href="{% url 'supply_create' %}?store={{ store.id }}">Создать поставку</a></p>
                 <p><a href="{% url 'transaction_create' %}?store={{ store.id }}">Создать поступление</a></p>
+                <p><a href="{% url 'act_create' %}?store={{ store.id }}">Создать акт сверки</a></p>
             </div>
     <div class="card mb-4">
         <div class="card-header bg-light">

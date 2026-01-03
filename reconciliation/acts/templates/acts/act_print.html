@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Акт сверки {{ store.name }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .period { margin: 20px 0; }
+        .table { width: 100%; border-collapse: collapse; }
+        .table th, .table td { border: 1px solid #000; padding: 8px; }
+        .table th { background-color: #f2f2f2; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .total-row { font-weight: bold; }
+        .mt-4 { margin-top: 20px; }
+        .mb-4 { margin-bottom: 20px; }
+        @media print {
+            .no-print { display: none !important; }
+            body { font-size: 12pt; }
+            .page-break { page-break-after: always; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Акт сверки взаиморасчетов</h2>
+        <h3>{{ store.name }}</h3>
+        <p>Период: с {{ act.period_start|date:"d.m.Y" }} по {{ act.period_end|date:"d.m.Y" }}</p>
+        <p>Дата формирования: {{ act.date|date:"d.m.Y H:i" }}</p>
+    </div>
+    
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Дата</th>
+                <th>Тип</th>
+                <th class="text-right">Поставка</th>
+                <th class="text-right">Оплата</th>
+                <th class="text-right">Баланс</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in events %}
+            <tr>
+                <td>{{ event.date|date:"d.m.Y" }}</td>
+                <td>{% if event.type == 'supply' %}Поставка{% else %}Оплата{% endif %}</td>
+                <td class="text-right">{% if event.supply_amount %}{{ event.supply_amount|floatformat:2 }}{% endif %}</td>
+                <td class="text-right">{% if event.transaction_amount %}{{ event.transaction_amount|floatformat:2 }}{% endif %}</td>
+                <td class="text-right">{{ event.balance|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="2">ИТОГО за период:</td>
+                <td class="text-right">{{ total_supply|floatformat:2 }}</td>
+                <td class="text-right">{{ total_transaction|floatformat:2 }}</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td colspan="2">Баланс на начало:</td>
+                <td colspan="3" class="text-right">{{ balance_before|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td colspan="2">Баланс на конец:</td>
+                <td colspan="3" class="text-right">{{ balance_after|floatformat:2 }}</td>
+            </tr>
+        </tfoot>
+    </table>
+    
+    <div class="mt-4">
+        <p><strong>Примечание:</strong> Положительный баланс - задолженность магазина, отрицательный - переплата.</p>
+    </div>
+        <div class="no-print" style="position: fixed; top: 20px; right: 20px;">
+        <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px;">
+            Печать
+        </button>
+        <button onclick="window.close()" style="padding: 10px 20px; font-size: 16px; margin-left: 10px;">
+            Закрыть
+        </button>
+    </div>
+</body>
+</html>

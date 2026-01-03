@@ -12,8 +12,8 @@ from django.views.generic import (
     UpdateView,
 )
 
-from .forms import StoreForm, SummaryForm, SupplyForm, TransactionForm
-from .models import Store, Summary, Supply, Transaction
+from .forms import ActForm, StoreForm, SummaryForm, SupplyForm, TransactionForm
+from .models import Act, Store, Summary, Supply, Transaction
 
 User = get_user_model()
 
@@ -281,3 +281,142 @@ class SummaryPrintView(
 ):
     model = Summary
     template_name = "acts/summary_print.html"
+
+
+class ActCreateView(LoginRequiredMixin, CreateView):
+    model = Act
+    form_class = ActForm
+    template_name = "acts/act_form.html"
+
+    def get_initial(self):
+        initial = super().get_initial()
+        store_id = self.request.GET.get("store")
+
+        if store_id:
+            try:
+                store = Store.objects.get(id=store_id)
+                initial["store"] = store
+            except Store.DoesNotExist:
+                pass
+
+        return initial
+
+    def get_success_url(self):
+        return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
+
+
+class ActUpdateView(LoginRequiredMixin, UpdateView):
+    model = Act
+    form_class = ActForm
+    success_url = reverse_lazy("act_list")
+
+    def get_success_url(self):
+        return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
+
+
+class ActDeleteView(LoginRequiredMixin, DeleteView):
+    model = Act
+    success_url = reverse_lazy("act_list")
+
+
+class ActListView(LoginRequiredMixin, ListView):
+    model = Act
+    context_object_name = "acts"
+    ordering = "id"
+    paginate_by = 10
+
+
+class ActViewMixin:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        act = self.get_object()
+
+        supplies = Supply.objects.filter(
+            store=act.store, date__gte=act.period_start, date__lte=act.period_end
+        ).order_by("date")
+
+        transactions = Transaction.objects.filter(
+            store=act.store, date__gte=act.period_start, date__lte=act.period_end
+        ).order_by("date")
+
+        events = []
+
+        for supply in supplies:
+            events.append(
+                {
+                    "type": "supply",
+                    "date": supply.date,
+                    "supply_amount": supply.price,
+                    "transaction_amount": None,
+                    "supply": supply,
+                    "transaction": None,
+                    "balance": None,
+                }
+            )
+
+        for transaction in transactions:
+            events.append(
+                {
+                    "type": "transaction",
+                    "date": transaction.date,
+                    "supply_amount": None,
+                    "transaction_amount": transaction.price,
+                    "supply": None,
+                    "transaction": transaction,
+                    "balance": None,
+                }
+            )
+
+        events.sort(key=lambda x: x["date"])
+
+        balance = 0
+        for event in events:
+            if event["type"] == "supply":
+                balance += event["supply_amount"]
+            else:
+                balance -= event["transaction_amount"]
+            event["balance"] = balance
+
+        total_supply = supplies.aggregate(
+            total=Coalesce(Sum("price"), 0, output_field=DecimalField())
+        )["total"]
+
+        total_transaction = transactions.aggregate(
+            total=Coalesce(Sum("price"), 0, output_field=DecimalField())
+        )["total"]
+
+        balance_before = (
+            Supply.objects.filter(store=act.store, date__lt=act.period_start).aggregate(
+                total=Coalesce(Sum("price"), 0, output_field=DecimalField())
+            )["total"]
+            - Transaction.objects.filter(
+                store=act.store, date__lt=act.period_start
+            ).aggregate(total=Coalesce(Sum("price"), 0, output_field=DecimalField()))[
+                "total"
+            ]
+        )
+
+        balance_after = balance_before + total_supply - total_transaction
+
+        context.update(
+            {
+                "events": events,
+                "total_supply": total_supply,
+                "total_transaction": total_transaction,
+                "balance_before": balance_before,
+                "balance_after": balance_after,
+                "store": act.store,
+            }
+        )
+
+        return context
+
+
+class ActDetailView(ActViewMixin, LoginRequiredMixin, DetailView):
+    model = Act
+    template_name = "acts/act_detail.html"
+
+
+class ActPrintView(ActViewMixin, LoginRequiredMixin, DetailView):
+    model = Act
+    template_name = "acts/act_print.html"

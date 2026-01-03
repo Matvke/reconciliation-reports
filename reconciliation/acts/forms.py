@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 
-from .models import Store, Summary, Supply, Transaction
+from .models import Act, Store, Summary, Supply, Transaction
 
 User = get_user_model()
 
@@ -88,7 +88,7 @@ class SupplyForm(forms.ModelForm):
 class SummaryForm(forms.ModelForm):
     class Meta:
         model = Summary
-        fields = "__all__"
+        fields = ["stores", "period_start", "period_end"]
         widgets = {
             "period_start": forms.DateInput(
                 attrs={
@@ -100,6 +100,31 @@ class SummaryForm(forms.ModelForm):
                 attrs={
                     "type": "date",
                     "class": "form-control",
+                }
+            ),
+        }
+
+
+class ActForm(forms.ModelForm):
+    class Meta:
+        model = Act
+        fields = ["period_start", "period_end", "store"]
+        widgets = {
+            "period_start": forms.DateInput(
+                attrs={
+                    "type": "date",
+                    "class": "form-control",
+                }
+            ),
+            "period_end": forms.DateInput(
+                attrs={
+                    "type": "date",
+                    "class": "form-control",
+                }
+            ),
+            "store": forms.Select(
+                attrs={
+                    "class": "form-control form-select",
                 }
             ),
         }

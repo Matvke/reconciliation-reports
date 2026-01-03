@@ -92,3 +92,26 @@ class Summary(models.Model):
     class Meta:
         verbose_name = "сводка"
         verbose_name_plural = "Сводки"
+
+
+class Act(models.Model):
+    period_start = models.DateField(verbose_name="Дата начала промежутка")
+    period_end = models.DateField(verbose_name="Дата конца промежутка")
+    date = models.DateTimeField(
+        auto_now_add=True, verbose_name="Дата создания акта сверки"
+    )
+    store = models.ForeignKey(
+        Store,
+        verbose_name="Магазин",
+        on_delete=models.CASCADE,
+        related_name="act",
+    )
+
+    def __str__(self):
+        moscow_tz = pytz.timezone("Europe/Moscow")
+        moscow_time = self.date.astimezone(moscow_tz)
+        return f"от {moscow_time.strftime('%d.%m.%Y %H:%M')}"
+
+    class Meta:
+        verbose_name = "акт сверки"
+        verbose_name_plural = "Акты сверки"

@@ -1,6 +1,12 @@
 from django.urls import path
 
 from .views import (
+    ActCreateView,
+    ActDeleteView,
+    ActDetailView,
+    ActListView,
+    ActPrintView,
+    ActUpdateView,
     HomePage,
     StoreCreateView,
     StoreDeleteView,
@@ -27,6 +33,12 @@ from .views import (
 
 urlpatterns = [
     path("", HomePage.as_view(), name="home"),
+    path("act_list", ActListView.as_view(), name="act_list"),
+    path("act_detail/<int:pk>/", ActDetailView.as_view(), name="act_detail"),
+    path("act_update/<int:pk>/", ActUpdateView.as_view(), name="act_update"),
+    path("act_delete/<int:pk>/", ActDeleteView.as_view(), name="act_delete"),
+    path("act_create", ActCreateView.as_view(), name="act_create"),
+    path("act_print/<int:pk>/", ActPrintView.as_view(), name="act_print"),
     path("stores", StoreListView.as_view(), name="stores"),
     path("store_create", StoreCreateView.as_view(), name="store_create"),
     path("store_update/<int:pk>/", StoreUpdateView.as_view(), name="store_update"),

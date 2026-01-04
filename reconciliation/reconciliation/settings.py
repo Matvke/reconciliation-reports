@@ -2,13 +2,15 @@ import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure")
-DEBUG = os.getenv("DEBUG", True)
 
 ALLOWED_HOSTS = []
-ALLOWED_HOSTS.extend(os.environ["ALLOWED_HOSTS"].split(","))
+env_allowed_hosts = os.getenv("ALLOWED_HOSTS")
+if env_allowed_hosts:
+    hosts = [host.strip() for host in env_allowed_hosts.split(",") if host.strip()]
+    ALLOWED_HOSTS.extend(hosts)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -49,24 +51,26 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "reconciliation.wsgi.application"
 
-if not os.getenv("DEBUG"):
-    DATA_DIR = Path(os.environ.get("DATA_DIR", "/app/data"))
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": DATA_DIR / "db.sqlite3",
-        }
-    }
+if DEBUG:
+    DATA_DIR = BASE_DIR
 else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
+    DATA_DIR = Path(os.environ.get("DATA_DIR", "/app/data"))
+    os.makedirs(DATA_DIR, exist_ok=True)
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": DATA_DIR / "db.sqlite3",
     }
+}
 
 CSRF_TRUSTED_ORIGINS = []
-CSRF_TRUSTED_ORIGINS.extend(os.environ["CSRF_TRUSTED_ORIGINS"].split(","))
+env_csrf_origins = os.getenv("CSRF_TRUSTED_ORIGINS")
+if env_csrf_origins:
+    origins = [
+        origin.strip() for origin in env_csrf_origins.split(",") if origin.strip()
+    ]
+    CSRF_TRUSTED_ORIGINS.extend(origins)
 
 AUTH_PASSWORD_VALIDATORS = [
     {

@@ -69,29 +69,21 @@ class StoreDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        store_with_stats = (
-            Store.objects.filter(pk=self.object.pk)
-            .annotate(
-                supply_total=Coalesce(
-                    Sum("supply__price"), Value(0, output_field=DecimalField())
-                ),
-                transaction_total=Coalesce(
-                    Sum("transaction__price"), Value(0, output_field=DecimalField())
-                ),
-            )
-            .annotate(debt=F("supply_total") - F("transaction_total"))
-            .first()
-        )
+        transaction_total = Transaction.objects.filter(store=self.object).aggregate(
+            total=Coalesce(Sum("price"), Value(0, output_field=DecimalField()))
+        )["total"]
+
+        supply_total = Supply.objects.filter(store=self.object).aggregate(
+            total=Coalesce(Sum("price"), Value(0, output_field=DecimalField()))
+        )["total"]
+
+        debt = supply_total - transaction_total
 
         context.update(
             {
-                "debt": store_with_stats.debt,
-                "supply_total": store_with_stats.supply_total
-                if store_with_stats
-                else 0,
-                "transaction_total": store_with_stats.transaction_total
-                if store_with_stats
-                else 0,
+                "debt": debt,
+                "transaction_total": transaction_total,
+                "supply_total": supply_total,
             }
         )
         return context

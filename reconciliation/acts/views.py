@@ -26,10 +26,12 @@ class HomePage(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         qs = Store.objects.annotate(
             supply_total=Coalesce(
-                Sum("supply__price"), Value(0, output_field=DecimalField())
+                Sum("supply__price", distinct=True),
+                Value(0, output_field=DecimalField()),
             ),
             transaction_total=Coalesce(
-                Sum("transaction__price"), Value(0, output_field=DecimalField())
+                Sum("transaction__price", distinct=True),
+                Value(0, output_field=DecimalField()),
             ),
         ).annotate(debt=F("supply_total") - F("transaction_total"))
         total_debt = qs.aggregate(
@@ -51,13 +53,13 @@ class StoreCreateView(LoginRequiredMixin, CreateView):
 
 class StoreDeleteView(LoginRequiredMixin, DeleteView):
     model = Store
-    success_url = reverse_lazy("stores")
+    success_url = reverse_lazy("store_list")
 
 
 class StoreUpdateView(LoginRequiredMixin, UpdateView):
     model = Store
     form_class = StoreForm
-    success_url = reverse_lazy("stores")
+    success_url = reverse_lazy("store_list")
 
     def get_success_url(self):
         return reverse_lazy("store_detail", kwargs={"pk": self.object.pk})
@@ -229,8 +231,9 @@ class SummaryViewMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        stores_list = list(
-            Store.objects.annotate(
+        store_list = Summary.objects.get(pk=self.object.id).stores
+        summaries = list(
+            store_list.annotate(
                 supply_total=Coalesce(
                     Sum("supply__price"), Value(0, output_field=DecimalField())
                 ),
@@ -243,13 +246,13 @@ class SummaryViewMixin:
             .order_by("-debt")
         )
 
-        total_supply = sum(store["supply_total"] for store in stores_list)
-        total_transaction = sum(store["transaction_total"] for store in stores_list)
-        total_debt = sum(store["debt"] for store in stores_list)
+        total_supply = sum(store["supply_total"] for store in summaries)
+        total_transaction = sum(store["transaction_total"] for store in summaries)
+        total_debt = sum(store["debt"] for store in summaries)
 
         context.update(
             {
-                "stores": stores_list,
+                "stores": summaries,
                 "total_supply": total_supply,
                 "total_transaction": total_transaction,
                 "total_debt": total_debt,

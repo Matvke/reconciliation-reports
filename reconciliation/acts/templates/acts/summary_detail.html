@@ -52,7 +52,7 @@
     </div>
     {% endif %}
 <div class="no-print mt-3">
-    <a href="{% url 'summary_print' summary.pk %}" target="_blank" class="btn btn-outline-secondary">
+    <a href="{% url 'acts:summary_print' summary.pk %}" target="_blank" class="btn btn-outline-secondary">
         <i class="bi bi-printer"></i> Версия для печати
     </a>
     <button onclick="window.print()" class="btn btn-secondary">

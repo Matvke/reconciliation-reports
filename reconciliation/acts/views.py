@@ -48,21 +48,21 @@ class StoreCreateView(LoginRequiredMixin, CreateView):
     form_class = StoreForm
 
     def get_success_url(self):
-        return reverse_lazy("store_detail", kwargs={"pk": self.object.pk})
+        return reverse_lazy("acts:store_detail", kwargs={"pk": self.object.pk})
 
 
 class StoreDeleteView(LoginRequiredMixin, DeleteView):
     model = Store
-    success_url = reverse_lazy("store_list")
+    success_url = reverse_lazy("acts:store_list")
 
 
 class StoreUpdateView(LoginRequiredMixin, UpdateView):
     model = Store
     form_class = StoreForm
-    success_url = reverse_lazy("store_list")
+    success_url = reverse_lazy("acts:store_list")
 
     def get_success_url(self):
-        return reverse_lazy("store_detail", kwargs={"pk": self.object.pk})
+        return reverse_lazy("acts:store_detail", kwargs={"pk": self.object.pk})
 
 
 class StoreDetailView(LoginRequiredMixin, DetailView):
@@ -114,10 +114,10 @@ class SupplyUpdateView(LoginRequiredMixin, UpdateView):
     model = Supply
     form_class = SupplyForm
 
-    success_url = reverse_lazy("supply_list")
+    success_url = reverse_lazy("acts:supply_list")
 
     def get_success_url(self):
-        return reverse_lazy("supply_detail", kwargs={"pk": self.object.pk})
+        return reverse_lazy("acts:supply_detail", kwargs={"pk": self.object.pk})
 
 
 class SupplyCreateView(LoginRequiredMixin, CreateView):
@@ -138,12 +138,12 @@ class SupplyCreateView(LoginRequiredMixin, CreateView):
         return initial
 
     def get_success_url(self):
-        return reverse_lazy("supply_detail", kwargs={"pk": self.object.id})
+        return reverse_lazy("acts:supply_detail", kwargs={"pk": self.object.id})
 
 
 class SupplyDeleteView(LoginRequiredMixin, DeleteView):
     model = Supply
-    success_url = reverse_lazy("supply_list")
+    success_url = reverse_lazy("acts:supply_list")
 
 
 class TransactionListView(LoginRequiredMixin, ListView):
@@ -162,10 +162,10 @@ class TransactionUpdateView(LoginRequiredMixin, UpdateView):
     model = Transaction
     fields = "__all__"
 
-    success_url = reverse_lazy("transaction_list")
+    success_url = reverse_lazy("acts:transaction_list")
 
     def get_success_url(self):
-        return reverse_lazy("transaction_detail", kwargs={"pk": self.object.pk})
+        return reverse_lazy("acts:transaction_detail", kwargs={"pk": self.object.pk})
 
 
 class TransactionCreateView(LoginRequiredMixin, CreateView):
@@ -186,12 +186,12 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
         return initial
 
     def get_success_url(self):
-        return reverse_lazy("transaction_detail", kwargs={"pk": self.object.pk})
+        return reverse_lazy("acts:transaction_detail", kwargs={"pk": self.object.pk})
 
 
 class TransactionDeleteView(LoginRequiredMixin, DeleteView):
     model = Transaction
-    success_url = reverse_lazy("transaction_list")
+    success_url = reverse_lazy("acts:transaction_list")
     template_name = "acts/transaction_confirm_delete.html"
 
 
@@ -201,21 +201,21 @@ class SummaryCreateView(LoginRequiredMixin, CreateView):
     template_name = "acts/summary_form.html"
 
     def get_success_url(self):
-        return reverse_lazy("summary_detail", kwargs={"pk": self.object.pk})
+        return reverse_lazy("acts:summary_detail", kwargs={"pk": self.object.pk})
 
 
 class SummaryUpdateView(LoginRequiredMixin, UpdateView):
     model = Summary
     fields = "__all__"
-    success_url = reverse_lazy("summary_list")
+    success_url = reverse_lazy("acts:summary_list")
 
     def get_success_url(self):
-        return reverse_lazy("summary_detail", kwargs={"pk": self.object.pk})
+        return reverse_lazy("acts:summary_detail", kwargs={"pk": self.object.pk})
 
 
 class SummaryDeleteView(LoginRequiredMixin, DeleteView):
     model = Summary
-    success_url = reverse_lazy("summary_list")
+    success_url = reverse_lazy("acts:summary_list")
 
 
 class SummaryListView(LoginRequiredMixin, ListView):
@@ -297,21 +297,21 @@ class ActCreateView(LoginRequiredMixin, CreateView):
         return initial
 
     def get_success_url(self):
-        return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
+        return reverse_lazy("acts:act_detail", kwargs={"pk": self.object.pk})
 
 
 class ActUpdateView(LoginRequiredMixin, UpdateView):
     model = Act
     form_class = ActForm
-    success_url = reverse_lazy("act_list")
+    success_url = reverse_lazy("acts:act_list")
 
     def get_success_url(self):
-        return reverse_lazy("act_detail", kwargs={"pk": self.object.pk})
+        return reverse_lazy("acts:act_detail", kwargs={"pk": self.object.pk})
 
 
 class ActDeleteView(LoginRequiredMixin, DeleteView):
     model = Act
-    success_url = reverse_lazy("act_list")
+    success_url = reverse_lazy("acts:act_list")
 
 
 class ActListView(LoginRequiredMixin, ListView):

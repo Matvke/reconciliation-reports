@@ -60,16 +60,6 @@
                         </button>
                         
                         <input type="hidden" name="next" value="{{ next }}">
-                        
-                        <a href="{% url 'password_reset' %}" class="btn btn-link">
-                            <i class="bi bi-question-circle"></i> Забыли пароль?
-                        </a>
-                        
-                        {% if allow_registration %}
-                        <a href="{% url 'register' %}" class="btn btn-outline-success">
-                            <i class="bi bi-person-plus"></i> Регистрация
-                        </a>
-                        {% endif %}
                     </div>
                 </form>
             </div>

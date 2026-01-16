@@ -10,7 +10,7 @@
         {% for store in stores %}
         <div class="card mb-3">
             <div class="card-body">
-                <h5 class="card-title"><a href="{% url 'store_detail' store.pk %}">{{ store.name }}</a></h5>
+                <h5 class="card-title"><a href="{% url 'acts:store_detail' store.pk %}">{{ store.name }}</a></h5>
                 <p class="card-text">Долг: {{ store.debt|floatformat:2 }} руб.</p>
             </div>
         </div>
@@ -24,9 +24,9 @@
                 Быстрые действия
             </div>
             <div class="card-body">
-                <p><a href="{% url 'supply_create' %}">Создать поставку</a></p>
-                <p><a href="{% url 'transaction_create' %}">Создать поступление</a></p>
-                <p><a href="{% url 'summary_create' %}">Создать акт сверки</a></p>
+                <p><a href="{% url 'acts:supply_create' %}">Создать поставку</a></p>
+                <p><a href="{% url 'acts:transaction_create' %}">Создать поступление</a></p>
+                <p><a href="{% url 'acts:summary_create' %}">Создать акт сверки</a></p>
             </div>
         </div>
         <p></p>

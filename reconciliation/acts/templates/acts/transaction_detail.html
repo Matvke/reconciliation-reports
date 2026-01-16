@@ -5,10 +5,10 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Поступление от магазина {{ transaction.store }}</h1>
         <div>
-            <a href="{% url 'transaction_update' transaction.pk %}" class="btn btn-primary">
+            <a href="{% url 'acts:transaction_update' transaction.pk %}" class="btn btn-primary">
                 <i class="bi bi-pencil"></i> Редактировать
             </a>
-            <a href="{% url 'transaction_delete' transaction.pk %}" class="btn btn-danger">
+            <a href="{% url 'acts:transaction_delete' transaction.pk %}" class="btn btn-danger">
                 <i class="bi bi-trash"></i> Удалить
             </a>
         </div>
@@ -27,12 +27,12 @@
         </div>
     </div>
     <div class="mt-4">
-        <a href="{% url 'transaction_list' %}" class="btn btn-secondary">
+        <a href="{% url 'acts:transaction_list' %}" class="btn btn-secondary">
             <i class="bi bi-arrow-left"></i> Назад к списку поступлений
         </a>
     </div>
     <div class="mt-4">
-        <a href="{% url 'store_detail' transaction.store.id %}" class="btn btn-secondary">
+        <a href="{% url 'acts:store_detail' transaction.store.id %}" class="btn btn-secondary">
             <i class="bi bi-arrow-left"></i> К магазину {{ transaction.store.name }}
         </a>
     </div>

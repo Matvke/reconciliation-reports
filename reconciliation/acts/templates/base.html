@@ -20,14 +20,14 @@
 <body>
     <nav class="no-print navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">Домой</a>
+            <a class="navbar-brand" href="{% url 'acts:home' %}">Домой</a>
             <div class="navbar-nav">
                 {% if user.is_authenticated %}
-                    <a class="nav-link" href="{% url 'store_list' %}">Магазины</a>
-                    <a class="nav-link" href="{% url 'supply_list' %}">Поставки</a>
-                    <a class="nav-link" href="{% url 'transaction_list' %}">Поступления</a>
-                    <a class="nav-link" href="{% url 'summary_list' %}">Сводки</a>
-                    <a class="nav-link" href="{% url 'act_list' %}">Акты сверки</a>
+                    <a class="nav-link" href="{% url 'acts:store_list' %}">Магазины</a>
+                    <a class="nav-link" href="{% url 'acts:supply_list' %}">Поставки</a>
+                    <a class="nav-link" href="{% url 'acts:transaction_list' %}">Поступления</a>
+                    <a class="nav-link" href="{% url 'acts:summary_list' %}">Сводки</a>
+                    <a class="nav-link" href="{% url 'acts:act_list' %}">Акты сверки</a>
                     <li class="nav-item dropdown">
                         <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-person-circle"></i> {{ user.username }}

@@ -31,6 +31,8 @@ from .views import (
     TransactionUpdateView,
 )
 
+app_name = "acts"
+
 urlpatterns = [
     path("", HomePage.as_view(), name="home"),
     # acts

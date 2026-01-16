@@ -148,10 +148,10 @@
     </div>
 
     <div class="mt-4 d-flex justify-content-between">
-        <a href="{% url 'act_print' act.pk %}" target="_blank" class="btn btn-outline-secondary">
+        <a href="{% url 'acts:act_print' act.pk %}" target="_blank" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Версия для печати
         </a>
-        <a href="{% url 'act_list' %}" class="btn btn-outline-secondary">
+        <a href="{% url 'acts:act_list' %}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> К списку актов
         </a>
     </div>

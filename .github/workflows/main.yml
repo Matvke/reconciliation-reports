@@ -21,8 +21,8 @@ jobs:
       
       - name: Test backend
         run: |
-          pip install -r requirements.txt
           cd reconciliation  
+          pip install -r requirements.txt
           pip install ruff
           python -m ruff check .
           pytest

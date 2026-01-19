@@ -93,16 +93,44 @@ class StoreDetailView(LoginRequiredMixin, DetailView):
 
 class StoreListView(LoginRequiredMixin, ListView):
     model = Store
-    context_object_name = "stores"
+    context_object_name = "items"
     ordering = "id"
     paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "title": "Магазины",
+                "create_url_name": "acts:store_create",
+                "create_text": "Создать магазин",
+                "detail_url_name": "acts:store_detail",
+                "update_url_name": "acts:store_update",
+                "delete_url_name": "acts:store_delete",
+            }
+        )
+        return context
 
 
 class SupplyListView(LoginRequiredMixin, ListView):
     model = Supply
     ordering = "date"
-    context_object_name = "supplies"
+    context_object_name = "items"
     paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "title": "Поставки",
+                "create_url_name": "acts:supply_create",
+                "create_text": "Создать поставку",
+                "detail_url_name": "acts:supply_detail",
+                "update_url_name": "acts:supply_update",
+                "delete_url_name": "acts:supply_delete",
+            }
+        )
+        return context
 
 
 class SupplyDetailView(LoginRequiredMixin, DetailView):
@@ -149,8 +177,22 @@ class SupplyDeleteView(LoginRequiredMixin, DeleteView):
 class TransactionListView(LoginRequiredMixin, ListView):
     model = Transaction
     ordering = "date"
-    context_object_name = "transactions"
+    context_object_name = "items"
     paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "title": "Поступления средств",
+                "create_url_name": "acts:transaction_create",
+                "create_text": "Создать поступление",
+                "detail_url_name": "acts:transaction_detail",
+                "update_url_name": "acts:transaction_update",
+                "delete_url_name": "acts:transaction_delete",
+            }
+        )
+        return context
 
 
 class TransactionDetailView(LoginRequiredMixin, DetailView):
@@ -220,9 +262,23 @@ class SummaryDeleteView(LoginRequiredMixin, DeleteView):
 
 class SummaryListView(LoginRequiredMixin, ListView):
     model = Summary
-    context_object_name = "summaries"
+    context_object_name = "items"
     ordering = "id"
     paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "title": "Сводки",
+                "create_url_name": "acts:summary_create",
+                "create_text": "Создать сводку",
+                "detail_url_name": "acts:summary_detail",
+                "update_url_name": "acts:summary_update",
+                "delete_url_name": "acts:summary_delete",
+            }
+        )
+        return context
 
 
 class SummaryViewMixin:
@@ -316,9 +372,23 @@ class ActDeleteView(LoginRequiredMixin, DeleteView):
 
 class ActListView(LoginRequiredMixin, ListView):
     model = Act
-    context_object_name = "acts"
+    context_object_name = "items"
     ordering = "id"
     paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "title": "Акты сверки",
+                "create_url_name": "acts:act_create",
+                "create_text": "Создать поставку",
+                "detail_url_name": "acts:act_detail",
+                "update_url_name": "acts:act_update",
+                "delete_url_name": "acts:act_delete",
+            }
+        )
+        return context
 
 
 class ActViewMixin:

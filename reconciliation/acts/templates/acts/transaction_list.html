@@ -1,23 +1,5 @@
-{% extends 'base.html' %}
+{% extends 'base_list.html' %}
 
-{% block content %}
-<h1>Поступления средств</h1>
-<div class="card mb-3">
-    <div class="card-body">
-        <a href="{% url 'acts:transaction_create' %}">Добавить поступление</a>
-    </div>
-</div>
-
-{% for transaction in transactions %}
-<div class="card mb-3">
-    <div class="card-body">
-        <h5 class="card-title"><a href="{% url 'acts:transaction_detail' transaction.pk %}">Поступление номер {{ transaction.id }} {{transaction}}</a></h5>
-        
-        <p class="card-text"><a href="{% url 'acts:transaction_update' transaction.pk %}">Изменить</a></p>
-        <p class="card-text"><a href="{% url 'acts:transaction_delete' transaction.pk %}">Удалить</a></p>
-    </div>
-</div>
-{% endfor %}
-
-{% include 'partials/pagination.html' %}
+{% block item_title %}
+{{ item }}
 {% endblock %}

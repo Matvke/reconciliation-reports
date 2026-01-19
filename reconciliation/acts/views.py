@@ -46,6 +46,29 @@ class HomePage(LoginRequiredMixin, TemplateView):
 class StoreCreateView(LoginRequiredMixin, CreateView):
     model = Store
     form_class = StoreForm
+    context_object_name = "item"
+    template_name = "base_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({"item_name": "магазина"})
+        return context
+
+    def get_success_url(self):
+        return reverse_lazy("acts:store_detail", kwargs={"pk": self.object.pk})
+
+
+class StoreUpdateView(LoginRequiredMixin, UpdateView):
+    model = Store
+    form_class = StoreForm
+    success_url = reverse_lazy("acts:store_list")
+    template_name = "base_form.html"
+    context_object_name = "item"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({"item_name": "магазина"})
+        return context
 
     def get_success_url(self):
         return reverse_lazy("acts:store_detail", kwargs={"pk": self.object.pk})
@@ -54,15 +77,6 @@ class StoreCreateView(LoginRequiredMixin, CreateView):
 class StoreDeleteView(LoginRequiredMixin, DeleteView):
     model = Store
     success_url = reverse_lazy("acts:store_list")
-
-
-class StoreUpdateView(LoginRequiredMixin, UpdateView):
-    model = Store
-    form_class = StoreForm
-    success_url = reverse_lazy("acts:store_list")
-
-    def get_success_url(self):
-        return reverse_lazy("acts:store_detail", kwargs={"pk": self.object.pk})
 
 
 class StoreDetailView(LoginRequiredMixin, DetailView):
@@ -95,6 +109,7 @@ class StoreListView(LoginRequiredMixin, ListView):
     model = Store
     context_object_name = "items"
     ordering = "id"
+    template_name = "base_list.html"
     paginate_by = 10
 
     def get_context_data(self, **kwargs):
@@ -116,6 +131,7 @@ class SupplyListView(LoginRequiredMixin, ListView):
     model = Supply
     ordering = "date"
     context_object_name = "items"
+    template_name = "base_list.html"
     paginate_by = 10
 
     def get_context_data(self, **kwargs):
@@ -141,8 +157,14 @@ class SupplyDetailView(LoginRequiredMixin, DetailView):
 class SupplyUpdateView(LoginRequiredMixin, UpdateView):
     model = Supply
     form_class = SupplyForm
-
     success_url = reverse_lazy("acts:supply_list")
+    context_object_name = "item"
+    template_name = "base_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({"item_name": "поставки"})
+        return context
 
     def get_success_url(self):
         return reverse_lazy("acts:supply_detail", kwargs={"pk": self.object.pk})
@@ -151,6 +173,13 @@ class SupplyUpdateView(LoginRequiredMixin, UpdateView):
 class SupplyCreateView(LoginRequiredMixin, CreateView):
     model = Supply
     form_class = SupplyForm
+    context_object_name = "item"
+    template_name = "base_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({"item_name": "поставки"})
+        return context
 
     def get_initial(self):
         initial = super().get_initial()
@@ -178,6 +207,7 @@ class TransactionListView(LoginRequiredMixin, ListView):
     model = Transaction
     ordering = "date"
     context_object_name = "items"
+    template_name = "base_list.html"
     paginate_by = 10
 
     def get_context_data(self, **kwargs):
@@ -202,9 +232,15 @@ class TransactionDetailView(LoginRequiredMixin, DetailView):
 
 class TransactionUpdateView(LoginRequiredMixin, UpdateView):
     model = Transaction
-    fields = "__all__"
-
+    form_class = TransactionForm
     success_url = reverse_lazy("acts:transaction_list")
+    context_object_name = "item"
+    template_name = "base_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({"item_name": "поступления средств"})
+        return context
 
     def get_success_url(self):
         return reverse_lazy("acts:transaction_detail", kwargs={"pk": self.object.pk})
@@ -213,6 +249,13 @@ class TransactionUpdateView(LoginRequiredMixin, UpdateView):
 class TransactionCreateView(LoginRequiredMixin, CreateView):
     model = Transaction
     form_class = TransactionForm
+    context_object_name = "item"
+    template_name = "base_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({"item_name": "поступления средств"})
+        return context
 
     def get_initial(self):
         initial = super().get_initial()
@@ -240,7 +283,13 @@ class TransactionDeleteView(LoginRequiredMixin, DeleteView):
 class SummaryCreateView(LoginRequiredMixin, CreateView):
     model = Summary
     form_class = SummaryForm
-    template_name = "acts/summary_form.html"
+    context_object_name = "item"
+    template_name = "base_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({"item_name": "сводки"})
+        return context
 
     def get_success_url(self):
         return reverse_lazy("acts:summary_detail", kwargs={"pk": self.object.pk})
@@ -248,8 +297,15 @@ class SummaryCreateView(LoginRequiredMixin, CreateView):
 
 class SummaryUpdateView(LoginRequiredMixin, UpdateView):
     model = Summary
-    fields = "__all__"
     success_url = reverse_lazy("acts:summary_list")
+    form_class = SummaryForm
+    context_object_name = "item"
+    template_name = "base_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({"item_name": "сводки"})
+        return context
 
     def get_success_url(self):
         return reverse_lazy("acts:summary_detail", kwargs={"pk": self.object.pk})
@@ -263,6 +319,7 @@ class SummaryDeleteView(LoginRequiredMixin, DeleteView):
 class SummaryListView(LoginRequiredMixin, ListView):
     model = Summary
     context_object_name = "items"
+    template_name = "base_list.html"
     ordering = "id"
     paginate_by = 10
 
@@ -337,7 +394,13 @@ class SummaryPrintView(
 class ActCreateView(LoginRequiredMixin, CreateView):
     model = Act
     form_class = ActForm
-    template_name = "acts/act_form.html"
+    template_name = "base_form.html"
+    context_object_name = "item"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({"item_name": "Акта сверки"})
+        return context
 
     def get_initial(self):
         initial = super().get_initial()
@@ -360,6 +423,13 @@ class ActUpdateView(LoginRequiredMixin, UpdateView):
     model = Act
     form_class = ActForm
     success_url = reverse_lazy("acts:act_list")
+    context_object_name = "item"
+    template_name = "base_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({"item_name": "акта сверки"})
+        return context
 
     def get_success_url(self):
         return reverse_lazy("acts:act_detail", kwargs={"pk": self.object.pk})
@@ -373,6 +443,7 @@ class ActDeleteView(LoginRequiredMixin, DeleteView):
 class ActListView(LoginRequiredMixin, ListView):
     model = Act
     context_object_name = "items"
+    template_name = "base_list.html"
     ordering = "id"
     paginate_by = 10
 
@@ -382,7 +453,7 @@ class ActListView(LoginRequiredMixin, ListView):
             {
                 "title": "Акты сверки",
                 "create_url_name": "acts:act_create",
-                "create_text": "Создать поставку",
+                "create_text": "Создать акт сверки",
                 "detail_url_name": "acts:act_detail",
                 "update_url_name": "acts:act_update",
                 "delete_url_name": "acts:act_delete",

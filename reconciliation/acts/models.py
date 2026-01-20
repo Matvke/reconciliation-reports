@@ -46,7 +46,7 @@ class Supply(models.Model):
         verbose_name_plural = "Поставки"
 
     def __str__(self):
-        return f"Поставка номер {self.id} от {self.date}"
+        return f"Поставка {self.store} {self.date}"
 
     def get_fields(self):
         return [(field, getattr(self, field.name)) for field in self._meta.fields]
@@ -67,7 +67,7 @@ class Transaction(models.Model):
         verbose_name_plural = "Платежи"
 
     def __str__(self):
-        return f"от {self.date} плательщик {self.store}"
+        return f"Поступление от {self.date} плательщик {self.store}"
 
     def get_fields(self):
         return [(field, getattr(self, field.name)) for field in self._meta.fields]
@@ -84,9 +84,9 @@ class Summary(models.Model):
     )
 
     def __str__(self):
-        moscow_tz = pytz.timezone("Europe/Moscow")
-        moscow_time = self.date.astimezone(moscow_tz)
-        return f"от {moscow_time.strftime('%d.%m.%Y %H:%M')}"
+        tz = pytz.timezone("Europe/Samara")
+        time = self.date.astimezone(tz)
+        return f"Сводка от {time.strftime('%d.%m.%Y %H:%M')}"
 
     class Meta:
         verbose_name = "сводка"
@@ -107,9 +107,9 @@ class Act(models.Model):
     )
 
     def __str__(self):
-        moscow_tz = pytz.timezone("Europe/Moscow")
-        moscow_time = self.date.astimezone(moscow_tz)
-        return f"от {moscow_time.strftime('%d.%m.%Y %H:%M')}"
+        tz = pytz.timezone("Europe/Samara")
+        time = self.date.astimezone(tz)
+        return f"Акт сверки от {time.strftime('%d.%m.%Y %H:%M')} {self.store}"
 
     class Meta:
         verbose_name = "акт сверки"

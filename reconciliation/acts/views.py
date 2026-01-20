@@ -12,7 +12,15 @@ from django.views.generic import (
     UpdateView,
 )
 
-from .forms import ActForm, StoreForm, SummaryForm, SupplyForm, TransactionForm
+from .base_views import (
+    ActFormMixin,
+    DeleteMixin,
+    ListMixin,
+    StoreFormMixin,
+    SummaryFormMixin,
+    SupplyFormMixin,
+    TransactionFormMixin,
+)
 from .models import Act, Store, Summary, Supply, Transaction
 
 User = get_user_model()
@@ -43,26 +51,29 @@ class HomePage(LoginRequiredMixin, TemplateView):
         return context
 
 
-class StoreCreateView(LoginRequiredMixin, CreateView):
-    model = Store
-    form_class = StoreForm
+class StoreCreateView(
+    LoginRequiredMixin,
+    StoreFormMixin,
+    CreateView,
+):
+    pass
 
-    def get_success_url(self):
-        return reverse_lazy("acts:store_detail", kwargs={"pk": self.object.pk})
+
+class StoreUpdateView(
+    LoginRequiredMixin,
+    StoreFormMixin,
+    UpdateView,
+):
+    pass
 
 
-class StoreDeleteView(LoginRequiredMixin, DeleteView):
+class StoreDeleteView(
+    LoginRequiredMixin,
+    DeleteMixin,
+    DeleteView,
+):
     model = Store
     success_url = reverse_lazy("acts:store_list")
-
-
-class StoreUpdateView(LoginRequiredMixin, UpdateView):
-    model = Store
-    form_class = StoreForm
-    success_url = reverse_lazy("acts:store_list")
-
-    def get_success_url(self):
-        return reverse_lazy("acts:store_detail", kwargs={"pk": self.object.pk})
 
 
 class StoreDetailView(LoginRequiredMixin, DetailView):
@@ -91,39 +102,68 @@ class StoreDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class StoreListView(LoginRequiredMixin, ListView):
+class StoreListView(
+    LoginRequiredMixin,
+    ListMixin,
+    ListView,
+):
     model = Store
-    context_object_name = "stores"
-    ordering = "id"
-    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "title": "Магазины",
+                "create_url_name": "acts:store_create",
+                "create_text": "Создать магазин",
+                "detail_url_name": "acts:store_detail",
+                "update_url_name": "acts:store_update",
+                "delete_url_name": "acts:store_delete",
+            }
+        )
+        return context
 
 
-class SupplyListView(LoginRequiredMixin, ListView):
+class SupplyListView(LoginRequiredMixin, ListMixin, ListView):
     model = Supply
     ordering = "date"
-    context_object_name = "supplies"
-    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "title": "Поставки",
+                "create_url_name": "acts:supply_create",
+                "create_text": "Создать поставку",
+                "detail_url_name": "acts:supply_detail",
+                "update_url_name": "acts:supply_update",
+                "delete_url_name": "acts:supply_delete",
+            }
+        )
+        return context
 
 
-class SupplyDetailView(LoginRequiredMixin, DetailView):
+class SupplyDetailView(
+    LoginRequiredMixin,
+    DetailView,
+):
     model = Supply
     context_object_name = "supply"
 
 
-class SupplyUpdateView(LoginRequiredMixin, UpdateView):
-    model = Supply
-    form_class = SupplyForm
-
-    success_url = reverse_lazy("acts:supply_list")
-
-    def get_success_url(self):
-        return reverse_lazy("acts:supply_detail", kwargs={"pk": self.object.pk})
+class SupplyUpdateView(
+    LoginRequiredMixin,
+    SupplyFormMixin,
+    UpdateView,
+):
+    pass
 
 
-class SupplyCreateView(LoginRequiredMixin, CreateView):
-    model = Supply
-    form_class = SupplyForm
-
+class SupplyCreateView(
+    LoginRequiredMixin,
+    SupplyFormMixin,
+    CreateView,
+):
     def get_initial(self):
         initial = super().get_initial()
         store_id = self.request.GET.get("store")
@@ -137,20 +177,37 @@ class SupplyCreateView(LoginRequiredMixin, CreateView):
 
         return initial
 
-    def get_success_url(self):
-        return reverse_lazy("acts:supply_detail", kwargs={"pk": self.object.id})
 
-
-class SupplyDeleteView(LoginRequiredMixin, DeleteView):
+class SupplyDeleteView(
+    LoginRequiredMixin,
+    DeleteMixin,
+    DeleteView,
+):
     model = Supply
     success_url = reverse_lazy("acts:supply_list")
 
 
-class TransactionListView(LoginRequiredMixin, ListView):
+class TransactionListView(
+    LoginRequiredMixin,
+    ListMixin,
+    ListView,
+):
     model = Transaction
     ordering = "date"
-    context_object_name = "transactions"
-    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "title": "Поступления средств",
+                "create_url_name": "acts:transaction_create",
+                "create_text": "Создать поступление",
+                "detail_url_name": "acts:transaction_detail",
+                "update_url_name": "acts:transaction_update",
+                "delete_url_name": "acts:transaction_delete",
+            }
+        )
+        return context
 
 
 class TransactionDetailView(LoginRequiredMixin, DetailView):
@@ -158,20 +215,19 @@ class TransactionDetailView(LoginRequiredMixin, DetailView):
     context_object_name = "transaction"
 
 
-class TransactionUpdateView(LoginRequiredMixin, UpdateView):
-    model = Transaction
-    fields = "__all__"
-
-    success_url = reverse_lazy("acts:transaction_list")
-
-    def get_success_url(self):
-        return reverse_lazy("acts:transaction_detail", kwargs={"pk": self.object.pk})
+class TransactionUpdateView(
+    LoginRequiredMixin,
+    TransactionFormMixin,
+    UpdateView,
+):
+    pass
 
 
-class TransactionCreateView(LoginRequiredMixin, CreateView):
-    model = Transaction
-    form_class = TransactionForm
-
+class TransactionCreateView(
+    LoginRequiredMixin,
+    TransactionFormMixin,
+    CreateView,
+):
     def get_initial(self):
         initial = super().get_initial()
         store_id = self.request.GET.get("store")
@@ -185,44 +241,62 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
 
         return initial
 
-    def get_success_url(self):
-        return reverse_lazy("acts:transaction_detail", kwargs={"pk": self.object.pk})
 
-
-class TransactionDeleteView(LoginRequiredMixin, DeleteView):
+class TransactionDeleteView(
+    LoginRequiredMixin,
+    DeleteMixin,
+    DeleteView,
+):
     model = Transaction
     success_url = reverse_lazy("acts:transaction_list")
-    template_name = "acts/transaction_confirm_delete.html"
 
 
-class SummaryCreateView(LoginRequiredMixin, CreateView):
+class SummaryCreateView(
+    LoginRequiredMixin,
+    SummaryFormMixin,
+    CreateView,
+):
+    pass
+
+
+class SummaryUpdateView(
+    LoginRequiredMixin,
+    SummaryFormMixin,
+    UpdateView,
+):
+    pass
+
+
+class SummaryDeleteView(
+    LoginRequiredMixin,
+    DeleteMixin,
+    DeleteView,
+):
     model = Summary
-    form_class = SummaryForm
-    template_name = "acts/summary_form.html"
-
-    def get_success_url(self):
-        return reverse_lazy("acts:summary_detail", kwargs={"pk": self.object.pk})
-
-
-class SummaryUpdateView(LoginRequiredMixin, UpdateView):
-    model = Summary
-    fields = "__all__"
     success_url = reverse_lazy("acts:summary_list")
-
-    def get_success_url(self):
-        return reverse_lazy("acts:summary_detail", kwargs={"pk": self.object.pk})
+    template_name = "base_confirm_delete.html"
 
 
-class SummaryDeleteView(LoginRequiredMixin, DeleteView):
+class SummaryListView(
+    LoginRequiredMixin,
+    ListMixin,
+    ListView,
+):
     model = Summary
-    success_url = reverse_lazy("acts:summary_list")
 
-
-class SummaryListView(LoginRequiredMixin, ListView):
-    model = Summary
-    context_object_name = "summaries"
-    ordering = "id"
-    paginate_by = 10
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "title": "Сводки",
+                "create_url_name": "acts:summary_create",
+                "create_text": "Создать сводку",
+                "detail_url_name": "acts:summary_detail",
+                "update_url_name": "acts:summary_update",
+                "delete_url_name": "acts:summary_delete",
+            }
+        )
+        return context
 
 
 class SummaryViewMixin:
@@ -278,11 +352,11 @@ class SummaryPrintView(
     template_name = "acts/summary_print.html"
 
 
-class ActCreateView(LoginRequiredMixin, CreateView):
-    model = Act
-    form_class = ActForm
-    template_name = "acts/act_form.html"
-
+class ActCreateView(
+    LoginRequiredMixin,
+    ActFormMixin,
+    CreateView,
+):
     def get_initial(self):
         initial = super().get_initial()
         store_id = self.request.GET.get("store")
@@ -296,29 +370,44 @@ class ActCreateView(LoginRequiredMixin, CreateView):
 
         return initial
 
-    def get_success_url(self):
-        return reverse_lazy("acts:act_detail", kwargs={"pk": self.object.pk})
+
+class ActUpdateView(
+    LoginRequiredMixin,
+    ActFormMixin,
+    UpdateView,
+):
+    pass
 
 
-class ActUpdateView(LoginRequiredMixin, UpdateView):
+class ActDeleteView(
+    LoginRequiredMixin,
+    DeleteMixin,
+    DeleteView,
+):
     model = Act
-    form_class = ActForm
     success_url = reverse_lazy("acts:act_list")
 
-    def get_success_url(self):
-        return reverse_lazy("acts:act_detail", kwargs={"pk": self.object.pk})
 
-
-class ActDeleteView(LoginRequiredMixin, DeleteView):
+class ActListView(
+    LoginRequiredMixin,
+    ListMixin,
+    ListView,
+):
     model = Act
-    success_url = reverse_lazy("acts:act_list")
 
-
-class ActListView(LoginRequiredMixin, ListView):
-    model = Act
-    context_object_name = "acts"
-    ordering = "id"
-    paginate_by = 10
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "title": "Акты сверки",
+                "create_url_name": "acts:act_create",
+                "create_text": "Создать акт сверки",
+                "detail_url_name": "acts:act_detail",
+                "update_url_name": "acts:act_update",
+                "delete_url_name": "acts:act_delete",
+            }
+        )
+        return context
 
 
 class ActViewMixin:

@@ -14,6 +14,7 @@ from django.views.generic import (
 
 from .base_views import (
     ActFormMixin,
+    DeleteMixin,
     ListMixin,
     StoreFormMixin,
     SummaryFormMixin,
@@ -66,7 +67,11 @@ class StoreUpdateView(
     pass
 
 
-class StoreDeleteView(LoginRequiredMixin, DeleteView):
+class StoreDeleteView(
+    LoginRequiredMixin,
+    DeleteMixin,
+    DeleteView,
+):
     model = Store
     success_url = reverse_lazy("acts:store_list")
 
@@ -173,7 +178,11 @@ class SupplyCreateView(
         return initial
 
 
-class SupplyDeleteView(LoginRequiredMixin, DeleteView):
+class SupplyDeleteView(
+    LoginRequiredMixin,
+    DeleteMixin,
+    DeleteView,
+):
     model = Supply
     success_url = reverse_lazy("acts:supply_list")
 
@@ -233,10 +242,13 @@ class TransactionCreateView(
         return initial
 
 
-class TransactionDeleteView(LoginRequiredMixin, DeleteView):
+class TransactionDeleteView(
+    LoginRequiredMixin,
+    DeleteMixin,
+    DeleteView,
+):
     model = Transaction
     success_url = reverse_lazy("acts:transaction_list")
-    template_name = "acts/transaction_confirm_delete.html"
 
 
 class SummaryCreateView(
@@ -255,9 +267,14 @@ class SummaryUpdateView(
     pass
 
 
-class SummaryDeleteView(LoginRequiredMixin, DeleteView):
+class SummaryDeleteView(
+    LoginRequiredMixin,
+    DeleteMixin,
+    DeleteView,
+):
     model = Summary
     success_url = reverse_lazy("acts:summary_list")
+    template_name = "base_confirm_delete.html"
 
 
 class SummaryListView(
@@ -362,7 +379,11 @@ class ActUpdateView(
     pass
 
 
-class ActDeleteView(LoginRequiredMixin, DeleteView):
+class ActDeleteView(
+    LoginRequiredMixin,
+    DeleteMixin,
+    DeleteView,
+):
     model = Act
     success_url = reverse_lazy("acts:act_list")
 

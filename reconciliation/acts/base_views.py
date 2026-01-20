@@ -86,3 +86,8 @@ class ListMixin:
     ordering = "id"
     template_name = "base_list.html"
     paginate_by = 10
+
+
+class DeleteMixin:
+    template_name = "base_confirm_delete.html"
+    context_object_name = "item"

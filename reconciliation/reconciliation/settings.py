@@ -57,12 +57,17 @@ else:
     DATA_DIR = Path(os.environ.get("DATA_DIR", "/app/data"))
     os.makedirs(DATA_DIR, exist_ok=True)
 
+STATIC_ROOT = DATA_DIR / "static"
+STATIC_URL = "/static/"
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": DATA_DIR / "db.sqlite3",
     }
 }
+
+os.makedirs(STATIC_ROOT, exist_ok=True)
 
 CSRF_TRUSTED_ORIGINS = []
 env_csrf_origins = os.getenv("CSRF_TRUSTED_ORIGINS")
@@ -95,8 +100,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
 LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"

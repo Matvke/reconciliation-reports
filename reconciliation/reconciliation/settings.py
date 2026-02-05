@@ -57,7 +57,7 @@ else:
     DATA_DIR = Path(os.environ.get("DATA_DIR", "/app/data"))
     os.makedirs(DATA_DIR, exist_ok=True)
 
-STATIC_ROOT = DATA_DIR / "static"
+STATIC_ROOT = BASE_DIR / "static"
 STATIC_URL = "/static/"
 
 DATABASES = {
@@ -66,8 +66,6 @@ DATABASES = {
         "NAME": DATA_DIR / "db.sqlite3",
     }
 }
-
-os.makedirs(STATIC_ROOT, exist_ok=True)
 
 CSRF_TRUSTED_ORIGINS = []
 env_csrf_origins = os.getenv("CSRF_TRUSTED_ORIGINS")

@@ -467,7 +467,24 @@ class ActViewMixin:
 
         events.sort(key=lambda x: x["date"])
 
-        balance = 0
+        supply_before = (
+            Supply.objects.filter(store=act.store, date__lt=act.period_start).aggregate(
+                total=Coalesce(Sum("price"), 0, output_field=DecimalField())
+            )["total"]
+            or 0
+        )
+
+        transaction_before = (
+            Transaction.objects.filter(
+                store=act.store, date__lt=act.period_start
+            ).aggregate(total=Coalesce(Sum("price"), 0, output_field=DecimalField()))[
+                "total"
+            ]
+            or 0
+        )
+
+        balance_before = supply_before - transaction_before
+        balance = balance_before
         for event in events:
             if event["type"] == "supply":
                 balance += event["supply_amount"]
@@ -488,24 +505,6 @@ class ActViewMixin:
             )["total"]
             or 0
         )
-
-        supply_before = (
-            Supply.objects.filter(store=act.store, date__lt=act.period_start).aggregate(
-                total=Coalesce(Sum("price"), 0, output_field=DecimalField())
-            )["total"]
-            or 0
-        )
-
-        transaction_before = (
-            Transaction.objects.filter(
-                store=act.store, date__lt=act.period_start
-            ).aggregate(total=Coalesce(Sum("price"), 0, output_field=DecimalField()))[
-                "total"
-            ]
-            or 0
-        )
-
-        balance_before = supply_before - transaction_before
 
         balance_after = balance_before + total_supply - total_transaction
 

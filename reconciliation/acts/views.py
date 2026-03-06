@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import DecimalField, F, Sum, Value
+from django.db.models import DecimalField, F, OuterRef, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 from django.urls import reverse_lazy
 from django.views.generic import (
@@ -32,22 +32,32 @@ class HomePage(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        supply_sub = (
+            Supply.objects.filter(store=OuterRef("pk"))
+            .values("store")
+            .annotate(total=Sum("price"))
+            .values("total")
+        )
+
+        transaction_sub = (
+            Transaction.objects.filter(store=OuterRef("pk"))
+            .values("store")
+            .annotate(total=Sum("price"))
+            .values("total")
+        )
+
         qs = Store.objects.annotate(
             supply_total=Coalesce(
-                Sum("supply__price", distinct=True),
-                Value(0, output_field=DecimalField()),
+                Subquery(supply_sub), Value(0, output_field=DecimalField())
             ),
             transaction_total=Coalesce(
-                Sum("transaction__price", distinct=True),
-                Value(0, output_field=DecimalField()),
+                Subquery(transaction_sub), Value(0, output_field=DecimalField())
             ),
         ).annotate(debt=F("supply_total") - F("transaction_total"))
-        total_debt = qs.aggregate(
-            total=Sum(F("supply_total") - F("transaction_total"))
-        )["total"]
+
         context["stores"] = qs
-        context["store_count"] = len(context["stores"])
-        context["total_debt"] = total_debt
+        context["total_debt"] = qs.aggregate(total=Sum("debt"))["total"] or 0
         return context
 
 
@@ -91,7 +101,6 @@ class StoreDetailView(LoginRequiredMixin, DetailView):
         )["total"]
 
         debt = supply_total - transaction_total
-
         context.update(
             {
                 "debt": debt,

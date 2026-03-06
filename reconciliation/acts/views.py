@@ -57,6 +57,7 @@ class HomePage(LoginRequiredMixin, TemplateView):
         ).annotate(debt=F("supply_total") - F("transaction_total"))
 
         context["stores"] = qs
+        context["store_count"] = len(context["stores"])
         context["total_debt"] = qs.aggregate(total=Sum("debt"))["total"] or 0
         return context
 

@@ -45,8 +45,8 @@
             <tr>
                 <td>{{ event.date|date:"d.m.Y" }}</td>
                 <td>{% if event.type == 'supply' %}Поставка{% else %}Оплата{% endif %}</td>
-                <td class="text-right">{% if event.supply_amount %}{{ event.supply_amount|floatformat:2 }}{% endif %}</td>
-                <td class="text-right">{% if event.transaction_amount %}{{ event.transaction_amount|floatformat:2 }}{% endif %}</td>
+                <td class="text-right">{% if event.type == 'supply' %}{{ event.price|floatformat:2 }}{% endif %}</td>
+                <td class="text-right">{% if event.type == 'transaction' %}{{ event.price|floatformat:2 }}{% endif %}</td>
                 <td class="text-right">{{ event.balance|floatformat:2 }}</td>
             </tr>
             {% endfor %}

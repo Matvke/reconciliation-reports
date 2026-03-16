@@ -13,20 +13,20 @@
             </a>
         </div>
     </div>
-            <div class="card-body">
-                <p><a href="{% url 'acts:supply_create' %}?store={{ store.id }}">Создать поставку</a></p>
-                <p><a href="{% url 'acts:transaction_create' %}?store={{ store.id }}">Создать поступление</a></p>
-                <p><a href="{% url 'acts:act_create' %}?store={{ store.id }}">Создать акт сверки</a></p>
-            </div>
+    <div class="card-body">
+        <p><a href="{% url 'acts:supply_create' %}?store={{ store.id }}">Создать поставку</a></p>
+        <p><a href="{% url 'acts:transaction_create' %}?store={{ store.id }}">Создать поступление</a></p>
+        <p><a href="{% url 'acts:act_create' %}?store={{ store.id }}">Создать акт сверки</a></p>
+    </div>
     <div class="card mb-4">
         <div class="card-header bg-light">
             <h5 class="mb-0">Основная информация</h5>
         </div>
         <div class="card-body">
             {% for field, value in store.get_fields %}
-                {% if value %}
-                <p><strong>{{ field.verbose_name }}:</strong> {{ value }}</p>
-                {% endif %}
+            {% if value %}
+            <p><strong>{{ field.verbose_name }}:</strong> {{ value }}</p>
+            {% endif %}
             {% endfor %}
         </div>
     </div>
@@ -38,16 +38,18 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-4 mb-3">
-                    <div class="card h-100 {% if store.debt > 0 %}border-danger{% elif store.debt < 0 %}border-success{% endif %}">
+                    <div
+                        class="card h-100 {% if store.debt > 0 %}border-danger{% elif store.debt < 0 %}border-success{% endif %}">
                         <div class="card-body text-center">
                             <h6 class="card-title">Общий долг</h6>
-                            <h4 class="card-text {% if store.debt > 0 %}text-danger{% elif store.debt < 0 %}text-success{% endif %}">
+                            <h4
+                                class="card-text {% if store.debt > 0 %}text-danger{% elif store.debt < 0 %}text-success{% endif %}">
                                 {{ debt|default:0|floatformat:2 }} руб.
                             </h4>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-md-4 mb-3">
                     <div class="card h-100">
                         <div class="card-body text-center">
@@ -58,7 +60,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-md-4 mb-3">
                     <div class="card h-100">
                         <div class="card-body text-center">
@@ -82,10 +84,19 @@
             <div class="list-group">
                 {% for supply in store.supply.all %}
                 <a href="{% url 'acts:supply_detail' supply.pk %}" class="list-group-item list-group-item-action">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h6 class="mb-1">Поставка №{{ supply.id }}</h6>
-                        <small>На стоимость {{ supply.price }} ₽</small>
-                        <small>{{ supply.date }}</small>
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Поставка №{{ supply.id }}</h6>
+                            {% for tag in supply.tags.all %}
+                            <span class="badge me-1" style="background-color: {{ tag.color }}; color: white;">
+                                {{ tag.name }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                        <div class="text-end">
+                            <small class="d-block">{{ supply.date|date:"d.m.Y" }}</small>
+                            <small class="fw-bold">{{ supply.price }} ₽</small>
+                        </div>
                     </div>
                 </a>
                 {% endfor %}
@@ -102,11 +113,21 @@
         <div class="card-body">
             <div class="list-group">
                 {% for transaction in store.transaction.all %}
-                <a href="{% url 'acts:transaction_detail' transaction.pk %}" class="list-group-item list-group-item-action">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h6 class="mb-1">Поступление №{{ transaction.id }}</h6>
-                        <small>На стоимость {{ transaction.price }} ₽</small>
-                        <small>{{ transaction.date }}</small>
+                <a href="{% url 'acts:transaction_detail' transaction.pk %}"
+                    class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Поступление №{{ transaction.id }}</h6>
+                            {% for tag in transaction.tags.all %}
+                            <span class="badge me-1" style="background-color: {{ tag.color }}; color: white;">
+                                {{ tag.name }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                        <div class="text-end">
+                            <small class="d-block">{{ transaction.date|date:"d.m.Y" }}</small>
+                            <small class="fw-bold">{{ transaction.price }} ₽</small>
+                        </div>
                     </div>
                 </a>
                 {% endfor %}

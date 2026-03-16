@@ -1,5 +1,5 @@
 from django.contrib import admin
 
-from .models import Act, Store, Summary, Supply, Transaction
+from .models import Act, Store, Summary, Supply, Tag, Transaction
 
-admin.site.register((Supply, Transaction, Store, Summary, Act))
+admin.site.register((Supply, Transaction, Store, Summary, Act, Tag))

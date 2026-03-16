@@ -3,9 +3,9 @@
 {% block content %}
 <h2>
     {% if object %}
-        Редактирование "{{ item }}"
+    Редактирование "{{ item }}"
     {% else %}
-        Создание {{ item_name }}
+    Создание {{ item_name }}
     {% endif %}
 </h2>
 <div class="container">
@@ -13,17 +13,17 @@
         <div class="col-md-6 col-lg-4">
             <form method="post">
                 {% csrf_token %}
-                
+
                 <div class="mb-3">
                     {{ form.as_p }}
                 </div>
-                
+
                 <div class="mt-4">
                     <button type="submit" class="btn btn-primary">
                         {% if object %}
-                            Сохранить
+                        Сохранить
                         {% else %}
-                            Создать
+                        Создать
                         {% endif %}
                     </button>
                     <a href="{% url 'acts:home' %}" class="btn btn-secondary">Отмена</a>

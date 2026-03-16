@@ -14,12 +14,12 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <h5>Магазин: <strong>{{ store.name }}</strong></h5>
+                    <h5>Клиент: <strong>{{ store.name }}</strong></h5>
                     {% if store.address %}
-                        <p><strong>Адрес:</strong> {{ store.address }}</p>
+                    <p><strong>Адрес:</strong> {{ store.address }}</p>
                     {% endif %}
                     {% if store.phone_number %}
-                        <p><strong>Телефон:</strong> {{ store.phone_number }}</p>
+                    <p><strong>Телефон:</strong> {{ store.phone_number }}</p>
                     {% endif %}
                 </div>
                 <div class="col-md-6">
@@ -39,10 +39,12 @@
 
     <div class="row mb-4">
         <div class="col-md-3">
-            <div class="card text-center {% if balance_before > 0 %}border-danger{% elif balance_before < 0 %}border-success{% endif %}">
+            <div
+                class="card text-center {% if balance_before > 0 %}border-danger{% elif balance_before < 0 %}border-success{% endif %}">
                 <div class="card-body">
                     <h6 class="card-subtitle mb-2 text-muted">Начальный баланс</h6>
-                    <h4 class="card-title {% if balance_before > 0 %}text-danger{% elif balance_before < 0 %}text-success{% endif %}">
+                    <h4
+                        class="card-title {% if balance_before > 0 %}text-danger{% elif balance_before < 0 %}text-success{% endif %}">
                         {{ balance_before|floatformat:2 }} ₽
                     </h4>
                 </div>
@@ -52,7 +54,7 @@
             <div class="card text-center border-primary">
                 <div class="card-body">
                     <h6 class="card-subtitle mb-2 text-muted">Поставки за период</h6>
-                    <h4 class="card-title text-primary">+{{ total_supply|floatformat:2 }} ₽</h4>
+                    <h4 class="card-title text-primary">-{{ total_supply|floatformat:2 }} ₽</h4>
                 </div>
             </div>
         </div>
@@ -60,15 +62,17 @@
             <div class="card text-center border-info">
                 <div class="card-body">
                     <h6 class="card-subtitle mb-2 text-muted">Оплаты за период</h6>
-                    <h4 class="card-title text-info">-{{ total_transaction|floatformat:2 }} ₽</h4>
+                    <h4 class="card-title text-info">+{{ total_transaction|floatformat:2 }} ₽</h4>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-center {% if balance_after > 0 %}border-danger{% elif balance_after < 0 %}border-success{% endif %}">
+            <div
+                class="card text-center {% if balance_after < 0 %}border-danger{% elif balance_after > 0 %}border-success{% endif %}">
                 <div class="card-body">
                     <h6 class="card-subtitle mb-2 text-muted">Конечный баланс</h6>
-                    <h4 class="card-title {% if balance_after > 0 %}text-danger{% elif balance_after < 0 %}text-success{% endif %}">
+                    <h4
+                        class="card-title {% if balance_after < 0 %}text-danger{% elif balance_after > 0 %}text-success{% endif %}">
                         {{ balance_after|floatformat:2 }} ₽
                     </h4>
                 </div>
@@ -87,57 +91,53 @@
                         <tr>
                             <th>Дата</th>
                             <th>Тип операции</th>
-                            <th>Поставка (приход)</th>
-                            <th>Оплата (расход)</th>
+                            <th>Поставка (расход)</th>
+                            <th>Оплата (приход)</th>
                             <th>Нарастающий баланс</th>
                             <th>Примечание</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for event in events %}
-                        <tr>
+                        <tr class="position-relative">
                             <td>{{ event.date|date:"d.m.Y" }}</td>
                             <td>
                                 {% if event.type == 'supply' %}
-                                    <span class="badge bg-primary">Поставка</span>
+                                <span class="badge bg-primary">Поставка</span>
                                 {% else %}
-                                    <span class="badge bg-info">Оплата</span>
+                                <span class="badge bg-info">Оплата</span>
                                 {% endif %}
                             </td>
                             <td class="text-end">
-                                {% if event.supply_amount %}
-                                    <span class="text-success">+{{ event.supply_amount|floatformat:2 }} ₽</span>
+                                {% if event.type == 'supply' %}
+                                <span class="text-danger">-{{ event.price|floatformat:2 }} ₽</span>
                                 {% else %}
-                                    <span class="text-muted">—</span>
+                                <span class="text-muted">—</span>
                                 {% endif %}
                             </td>
                             <td class="text-end">
-                                {% if event.transaction_amount %}
-                                    <span class="text-danger">-{{ event.transaction_amount|floatformat:2 }} ₽</span>
+                                {% if event.type == 'transaction' %}
+                                <span class="text-success">+{{ event.price|floatformat:2 }} ₽</span>
                                 {% else %}
-                                    <span class="text-muted">—</span>
+                                <span class="text-muted">—</span>
                                 {% endif %}
                             </td>
-                            <td class="text-end {% if event.balance > 0 %}text-danger{% elif event.balance < 0 %}text-success{% endif %}">
+                            <td
+                                class="text-end {% if event.balance < 0 %}text-danger{% elif event.balance > 0 %}text-success{% endif %}">
                                 {{ event.balance|floatformat:2 }} ₽
-                                {% if event.balance > 0 %}
-                                    <small class="text-muted">(долг)</small>
-                                {% elif event.balance < 0 %}
-                                    <small class="text-muted">(переплата)</small>
-                                {% endif %}
+                                {% if event.balance < 0 %}
+                                <small class="text-muted">(долг)</small>
+                                {% elif event.balance > 0 %} <small class="text-muted">(переплата)</small>
+                                    {% endif %}
                             </td>
                             <td>
                                 {% if event.type == 'supply' %}
-                                    Поставка №{{ event.supply.id }}
+                                Поставка №{{ event.supply.id }}
                                 {% else %}
-                                    Платеж от {{ event.transaction.date|date:"d.m.Y" }}
+                                Платеж от {{ event.transaction.date|date:"d.m.Y" }}
                                 {% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center text-muted py-4">
-                                За выбранный период операций не найдено
+                                <a href="{% if event.type == 'supply' %}{% url 'acts:supply_detail' event.event.pk %}{% elif event.type == 'transaction' %}{% url 'acts:transaction_detail' event.event.pk %}{% endif %}"
+                                    class="stretched-link"></a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -159,28 +159,37 @@
 
 <style>
     @media print {
-        .card-header, .btn, .badge {
+
+        .card-header,
+        .btn,
+        .badge {
             background-color: #fff !important;
             color: #000 !important;
             border: 1px solid #000;
         }
+
         .table {
             border: 1px solid #000;
         }
-        .table th, .table td {
+
+        .table th,
+        .table td {
             border: 1px solid #000;
         }
     }
-    
+
     .text-success {
         color: #198754 !important;
     }
+
     .text-danger {
         color: #dc3545 !important;
     }
+
     .text-primary {
         color: #0d6efd !important;
     }
+
     .text-info {
         color: #0dcaf0 !important;
     }

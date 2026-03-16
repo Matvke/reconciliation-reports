@@ -22,6 +22,7 @@ from .base_views import (
     TransactionFormMixin,
 )
 from .models import Act, Store, Summary, Supply, Transaction
+from .services import DebtCalculator
 
 User = get_user_model()
 
@@ -123,9 +124,9 @@ class StoreListView(
         context = super().get_context_data(**kwargs)
         context.update(
             {
-                "title": "Магазины",
+                "title": self.model._meta.verbose_name_plural,
                 "create_url_name": "acts:store_create",
-                "create_text": "Создать магазин",
+                "create_text": "Создать клиента",
                 "detail_url_name": "acts:store_detail",
                 "update_url_name": "acts:store_update",
                 "delete_url_name": "acts:store_delete",
@@ -136,13 +137,13 @@ class StoreListView(
 
 class SupplyListView(LoginRequiredMixin, ListMixin, ListView):
     model = Supply
-    ordering = "date"
+    ordering = "-date"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(
             {
-                "title": "Поставки",
+                "title": self.model._meta.verbose_name_plural,
                 "create_url_name": "acts:supply_create",
                 "create_text": "Создать поставку",
                 "detail_url_name": "acts:supply_detail",
@@ -203,15 +204,15 @@ class TransactionListView(
     ListView,
 ):
     model = Transaction
-    ordering = "date"
+    ordering = "-date"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(
             {
-                "title": "Поступления средств",
+                "title": self.model._meta.verbose_name_plural,
                 "create_url_name": "acts:transaction_create",
-                "create_text": "Создать поступление",
+                "create_text": "Создать платеж",
                 "detail_url_name": "acts:transaction_detail",
                 "update_url_name": "acts:transaction_update",
                 "delete_url_name": "acts:transaction_delete",
@@ -298,7 +299,7 @@ class SummaryListView(
         context = super().get_context_data(**kwargs)
         context.update(
             {
-                "title": "Сводки",
+                "title": self.model._meta.verbose_name_plural,
                 "create_url_name": "acts:summary_create",
                 "create_text": "Создать сводку",
                 "detail_url_name": "acts:summary_detail",
@@ -404,12 +405,13 @@ class ActListView(
     ListView,
 ):
     model = Act
+    ordering = "-date"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(
             {
-                "title": "Акты сверки",
+                "title": self.model._meta.verbose_name_plural,
                 "create_url_name": "acts:act_create",
                 "create_text": "Создать акт сверки",
                 "detail_url_name": "acts:act_detail",
@@ -426,105 +428,22 @@ class ActViewMixin:
     context_object_name = "act"
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
         act = self.get_object()
-
-        supplies = Supply.objects.filter(
-            store=act.store, date__gte=act.period_start, date__lte=act.period_end
-        ).order_by("date")
-
-        transactions = Transaction.objects.filter(
-            store=act.store, date__gte=act.period_start, date__lte=act.period_end
-        ).order_by("date")
-
-        events = []
-
-        for supply in supplies:
-            events.append(
-                {
-                    "type": "supply",
-                    "date": supply.date,
-                    "supply_amount": supply.price,
-                    "transaction_amount": None,
-                    "supply": supply,
-                    "transaction": None,
-                    "balance": None,
-                }
-            )
-
-        for transaction in transactions:
-            events.append(
-                {
-                    "type": "transaction",
-                    "date": transaction.date,
-                    "supply_amount": None,
-                    "transaction_amount": transaction.price,
-                    "supply": None,
-                    "transaction": transaction,
-                    "balance": None,
-                }
-            )
-
-        events.sort(key=lambda x: x["date"])
-
-        supply_before = (
-            Supply.objects.filter(store=act.store, date__lt=act.period_start).aggregate(
-                total=Coalesce(Sum("price"), 0, output_field=DecimalField())
-            )["total"]
-            or 0
-        )
-
-        transaction_before = (
-            Transaction.objects.filter(
-                store=act.store, date__lt=act.period_start
-            ).aggregate(total=Coalesce(Sum("price"), 0, output_field=DecimalField()))[
-                "total"
-            ]
-            or 0
-        )
-
-        balance_before = supply_before - transaction_before
-        balance = balance_before
-        for event in events:
-            if event["type"] == "supply":
-                balance += event["supply_amount"]
-            else:
-                balance -= event["transaction_amount"]
-            event["balance"] = balance
-
-        total_supply = (
-            supplies.aggregate(
-                total=Coalesce(Sum("price"), 0, output_field=DecimalField())
-            )["total"]
-            or 0
-        )
-
-        total_transaction = (
-            transactions.aggregate(
-                total=Coalesce(Sum("price"), 0, output_field=DecimalField())
-            )["total"]
-            or 0
-        )
-
-        balance_after = balance_before + total_supply - total_transaction
-
-        debt = max(balance_after, 0)
-
-        overpayment = abs(min(balance_after, 0))
-
+        calculator = DebtCalculator(act.store, act.period_start, act.period_end)
+        context = super().get_context_data(**kwargs)
+        result = calculator.calculate()
         context.update(
             {
-                "events": events,
-                "total_supply": total_supply,
-                "total_transaction": total_transaction,
-                "balance_before": balance_before,
-                "balance_after": balance_after,
-                "debt": debt,
-                "overpayment": overpayment,
                 "store": act.store,
+                "events": result.events,
+                "total_supply": result.total_supply,
+                "total_transaction": result.total_transaction,
+                "balance_before": result.balance_before,
+                "balance_after": result.balance_after,
+                "debt": result.debt,
+                "overpayment": result.overpayment,
             }
         )
-
         return context
 
 

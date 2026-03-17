@@ -3,29 +3,33 @@
 Reconciliation Reports is a small web application for small business accounting. It provides supply and transaction tracking, summaries and report generation.
 
 ## Contents
-- [Installation](#Installation)
-- [Stack](#Stack)
-- [Purpose](#Purpose)
-- [Environment Variables](#Environment)
+- [Installation](#installation)
+- [Stack](#stack)
+- [Purpose](#purpose)
+- [Environment Variables](#environment-variables)
+- [Tests](#tests)
 
 ## Installation
 1. Clone the repository 
-`(https://github.com/Matvke/reconciliation-reports.git)`
+`git clone https://github.com/Matvke/reconciliation-reports.git`
 2. Navigate to the project directory
 `cd reconciliation-reports/reconciliation`
-3. Install requirements
+3. Create venv and install requirements
+`python -m venv venv`
+`source venv/bin/activate`
 `pip install -r requirements.txt`
 4. Set up the database migrations
-`python manage.py makemigrations`
 `python manage.py migrate`
-5. Run the application locally
+5. Create superuser
+`python manage.py createsuperuser`
+6. Run the application locally
 `python manage.py runserver`
 
 ## Environment Variables
-1. `DATA_DIR=/app/data` The mounted S3 bucket directory where SQLite files are stored.
+1. `DATA_DIR=/app/data` The mounted S3 bucket directory.
 2. `SECRET_KEY=your_secret_key` Django secret key for cryptographic signing.
-3. `ALLOWED_HOSTS=acts-service.internal.containers.cloud.ru` Cloud.ru internal host for internal routing. 
-4. `CSRF_TRUSTED_ORIGINS=https://<your_container_app>.containerapps.ru` Cloud.ru public address for CSRF protection.
+3. `ALLOWED_HOSTS=`
+4. `CSRF_TRUSTED_ORIGINS=` 
 
 ## Tests
 1. Navigate to the project directory
@@ -40,9 +44,4 @@ Reconciliation Reports is a small web application for small business accounting.
 4. Pytest 9
 
 ## Purpose
-This application was developed for a small business. A key requirement was reducing the operating expenses.
-
-The goal was achieved by using cloud.ru **Container Apps** (an analog of **AWS App Runner**) and SQLite database stored in mounted S3 bucket.
-This setup is a good compromise, since the service is used by a small number of people. 
-
-It costs about 1$ per month, which satisfies the customer.
+This application was developed for a small business to track supplies, transactions and generate reconciliation reports.

@@ -20,10 +20,19 @@
         </div>
         <div class="card-body">
             {% for field, value in transaction.get_fields %}
-                {% if value %}
-                <p><strong>{{ field.verbose_name }}:</strong> {{ value }}</p>
-                {% endif %}
+            {% if value %}
+            <p><strong>{{ field.verbose_name }}:</strong> {{ value }}</p>
+            {% endif %}
             {% endfor %}
+            {% if transaction.get_tags_display %}
+                <p><strong>Метки:</strong>
+                {% for tag in transaction.get_tags_display %}
+                <span class="badge" style="background-color: {{ tag.color }};">
+                    {{ tag.name }}
+                </span>
+                {% endfor %}
+                </p>
+            {% endif %}
         </div>
     </div>
     <div class="mt-4">

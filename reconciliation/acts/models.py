@@ -66,6 +66,9 @@ class Supply(models.Model):
     def get_fields(self):
         return [(field, getattr(self, field.name)) for field in self._meta.fields]
 
+    def get_tags_display(self):
+        return self.tags.all()
+
 
 class Transaction(models.Model):
     price = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Сумма")
@@ -89,6 +92,9 @@ class Transaction(models.Model):
 
     def get_fields(self):
         return [(field, getattr(self, field.name)) for field in self._meta.fields]
+
+    def get_tags_display(self):
+        return self.tags.all()
 
 
 class Summary(models.Model):

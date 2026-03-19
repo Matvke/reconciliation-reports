@@ -61,6 +61,7 @@ class TransactionForm(forms.ModelForm):
                     "class": "form-control form-select",
                 }
             ),
+            "tags": forms.CheckboxSelectMultiple(),
         }
 
     def clean_price(self):
@@ -121,6 +122,7 @@ class SupplyForm(forms.ModelForm):
                     "class": "form-control form-select",
                 }
             ),
+            "tags": forms.CheckboxSelectMultiple(),
         }
 
     def clean_id(self):

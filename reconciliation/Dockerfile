@@ -12,4 +12,4 @@ COPY . .
 
 RUN python manage.py collectstatic --noinput --clear
 
-CMD ["sh", "-c", "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 reconciliation.wsgi:application"]
+CMD ["sh", "-c", "python manage.py migrate && exec gunicorn --bind 0.0.0.0:8000 reconciliation.wsgi:application"]

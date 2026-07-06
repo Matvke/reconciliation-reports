@@ -1,15 +1,34 @@
-FROM python:3.14-slim
+FROM python:3.14-slim AS base
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    VIRTUAL_ENV=/opt/venv \
+    PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
 
-RUN pip config set install.timeout 100
+RUN python -m venv "$VIRTUAL_ENV"
 
-COPY requirements.txt .
+FROM base AS builder
 
-RUN pip install --no-cache-dir -r requirements.txt 
+COPY requirements_prod.txt .
+
+RUN pip install --upgrade pip && pip install -r requirements_prod.txt
 
 COPY . .
 
 RUN python manage.py collectstatic --noinput --clear
 
-CMD ["sh", "-c", "python manage.py migrate && exec gunicorn --bind 0.0.0.0:8000 reconciliation.wsgi:application"]
+FROM base AS runtime
+
+COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder /app /app
+
+EXPOSE 8000
+
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "reconciliation.wsgi:application"]
+
+FROM runtime AS migrate
+
+CMD ["python", "manage.py", "migrate", "--noinput"]

@@ -1,3 +1,4 @@
+from decimal import Decimal
 from datetime import date
 
 import pytest
@@ -211,3 +212,51 @@ def test_calculate_debt():
     assert result.overpayment == 0
     assert result.total_supply == 0
     assert result.total_transaction == transaction1.price
+
+
+@pytest.mark.django_db
+def test_calculate_orders_events_chronologically():
+    """События должны идти по дате, а не по типу операции."""
+    store = Store.objects.create(name="Test_store")
+    later_supply = Supply.objects.create(
+        id="1", price=100, date=date(2026, 3, 16), store=store
+    )
+    earlier_transaction = Transaction.objects.create(
+        price=80, date=date(2026, 3, 15), store=store
+    )
+
+    calc = DebtCalculator(
+        store=store, period_start=date(2026, 3, 15), period_end=date(2026, 3, 16)
+    )
+
+    result = calc.calculate()
+
+    assert len(result.events) == 2
+    assert result.events[0]["type"] == "transaction"
+    assert result.events[0]["event"] == earlier_transaction
+    assert result.events[1]["type"] == "supply"
+    assert result.events[1]["event"] == later_supply
+
+
+@pytest.mark.django_db
+def test_calculate_keeps_decimal_precision():
+    """Суммы должны считаться в Decimal без ошибок округления."""
+    store = Store.objects.create(name="Decimal Store")
+    Supply.objects.create(id="D-1", price=Decimal("0.10"), date=date(2026, 3, 16), store=store)
+    Supply.objects.create(id="D-2", price=Decimal("0.20"), date=date(2026, 3, 16), store=store)
+    Transaction.objects.create(
+        price=Decimal("0.30"), date=date(2026, 3, 16), store=store
+    )
+
+    calc = DebtCalculator(
+        store=store, period_start=date(2026, 3, 16), period_end=date(2026, 3, 16)
+    )
+
+    result = calc.calculate()
+
+    assert result.total_supply == Decimal("0.30")
+    assert result.total_transaction == Decimal("0.30")
+    assert result.balance_before == Decimal("0")
+    assert result.balance_after == Decimal("0.00")
+    assert result.debt == Decimal("0")
+    assert result.overpayment == Decimal("0.00")

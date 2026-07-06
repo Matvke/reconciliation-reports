@@ -1,8 +1,13 @@
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import DecimalField, F, OuterRef, Subquery, Sum, Value
+from django.db.models import DecimalField, OuterRef, Prefetch, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -26,7 +31,11 @@ from .services import DebtCalculator
 
 User = get_user_model()
 
+cached_view = method_decorator(cache_page(300), name="dispatch")
+cookie_vary_view = method_decorator(vary_on_cookie, name="dispatch")
 
+@cached_view
+@cookie_vary_view
 class HomePage(LoginRequiredMixin, TemplateView):
     template_name = "pages/index.html"
     login_url = "/accounts/login/"
@@ -55,11 +64,26 @@ class HomePage(LoginRequiredMixin, TemplateView):
             transaction_total=Coalesce(
                 Subquery(transaction_sub), Value(0, output_field=DecimalField())
             ),
-        ).annotate(debt=F("supply_total") - F("transaction_total"))
+        )
 
-        context["stores"] = qs
-        context["store_count"] = len(context["stores"])
-        context["total_debt"] = qs.aggregate(total=Sum("debt"))["total"] or 0
+        stores = []
+        for store in qs:
+            supply_total = store.supply_total or Decimal("0")
+            transaction_total = store.transaction_total or Decimal("0")
+            stores.append(
+                {
+                    "pk": store.id,
+                    "id": store.id,
+                    "name": store.name,
+                    "supply_total": supply_total,
+                    "transaction_total": transaction_total,
+                    "debt": supply_total - transaction_total,
+                }
+            )
+
+        context["stores"] = stores
+        context["store_count"] = len(stores)
+        context["total_debt"] = sum((store["debt"] for store in stores), Decimal("0"))
         return context
 
 
@@ -88,8 +112,31 @@ class StoreDeleteView(
     success_url = reverse_lazy("acts:store_list")
 
 
+@cached_view
+@cookie_vary_view
 class StoreDetailView(LoginRequiredMixin, DetailView):
     model = Store
+
+    def get_queryset(self):
+        return (
+            super()
+            .get_queryset()
+            .prefetch_related(
+                Prefetch(
+                    "supply",
+                    queryset=Supply.objects.order_by("-date", "-timestamp", "-pk").prefetch_related(
+                        "tags"
+                    ),
+                ),
+                Prefetch(
+                    "transaction",
+                    queryset=Transaction.objects.order_by(
+                        "-date", "-timestamp", "-pk"
+                    ).prefetch_related("tags"),
+                ),
+                Prefetch("summaries", queryset=Summary.objects.order_by("-date")),
+            )
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -108,6 +155,9 @@ class StoreDetailView(LoginRequiredMixin, DetailView):
                 "debt": debt,
                 "transaction_total": transaction_total,
                 "supply_total": supply_total,
+                "supplies": list(self.object.supply.all()),
+                "transactions": list(self.object.transaction.all()),
+                "summaries": list(self.object.summaries.all()),
             }
         )
         return context
@@ -135,9 +185,14 @@ class StoreListView(
         return context
 
 
+@cached_view
+@cookie_vary_view
 class SupplyListView(LoginRequiredMixin, ListMixin, ListView):
     model = Supply
     ordering = "-date"
+
+    def get_queryset(self):
+        return super().get_queryset().select_related("store")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -154,12 +209,17 @@ class SupplyListView(LoginRequiredMixin, ListMixin, ListView):
         return context
 
 
+@cached_view
+@cookie_vary_view
 class SupplyDetailView(
     LoginRequiredMixin,
     DetailView,
 ):
     model = Supply
     context_object_name = "supply"
+
+    def get_queryset(self):
+        return super().get_queryset().select_related("store").prefetch_related("tags")
 
 
 class SupplyUpdateView(
@@ -198,6 +258,8 @@ class SupplyDeleteView(
     success_url = reverse_lazy("acts:supply_list")
 
 
+@cached_view
+@cookie_vary_view
 class TransactionListView(
     LoginRequiredMixin,
     ListMixin,
@@ -205,6 +267,9 @@ class TransactionListView(
 ):
     model = Transaction
     ordering = "-date"
+
+    def get_queryset(self):
+        return super().get_queryset().select_related("store")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -221,9 +286,16 @@ class TransactionListView(
         return context
 
 
+@cached_view
+@cookie_vary_view
 class TransactionDetailView(LoginRequiredMixin, DetailView):
     model = Transaction
     context_object_name = "transaction"
+
+    def get_queryset(self):
+        return super().get_queryset().select_related("store").prefetch_related(
+            "tags"
+        )
 
 
 class TransactionUpdateView(
@@ -288,6 +360,8 @@ class SummaryDeleteView(
     template_name = "base_confirm_delete.html"
 
 
+@cached_view
+@cookie_vary_view
 class SummaryListView(
     LoginRequiredMixin,
     ListMixin,
@@ -316,24 +390,51 @@ class SummaryViewMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        store_list = Summary.objects.get(pk=self.object.id).stores
-        summaries = list(
-            store_list.annotate(
-                supply_total=Coalesce(
-                    Sum("supply__price"), Value(0, output_field=DecimalField())
-                ),
-                transaction_total=Coalesce(
-                    Sum("transaction__price"), Value(0, output_field=DecimalField())
-                ),
-            )
-            .annotate(debt=F("supply_total") - F("transaction_total"))
-            .values("id", "name", "supply_total", "transaction_total", "debt")
-            .order_by("-debt")
+        summary = self.object
+        supply_subquery = (
+            Supply.objects.filter(store=OuterRef("pk"))
+            .values("store")
+            .annotate(total=Sum("price"))
+            .values("total")
+        )
+        transaction_subquery = (
+            Transaction.objects.filter(store=OuterRef("pk"))
+            .values("store")
+            .annotate(total=Sum("price"))
+            .values("total")
         )
 
-        total_supply = sum(store["supply_total"] for store in summaries)
-        total_transaction = sum(store["transaction_total"] for store in summaries)
-        total_debt = sum(store["debt"] for store in summaries)
+        summaries = list(
+            summary.stores.annotate(
+                supply_total=Coalesce(
+                    Subquery(supply_subquery), Value(0, output_field=DecimalField())
+                ),
+                transaction_total=Coalesce(
+                    Subquery(transaction_subquery),
+                    Value(0, output_field=DecimalField()),
+                ),
+            ).values("id", "name", "supply_total", "transaction_total")
+        )
+
+        summaries = [
+            {
+                "pk": store["id"],
+                "id": store["id"],
+                "name": store["name"],
+                "supply_total": store["supply_total"] or Decimal("0"),
+                "transaction_total": store["transaction_total"] or Decimal("0"),
+                "debt": (store["supply_total"] or Decimal("0"))
+                - (store["transaction_total"] or Decimal("0")),
+            }
+            for store in summaries
+        ]
+        summaries.sort(key=lambda item: (-item["debt"], item["name"]))
+
+        total_supply = sum((store["supply_total"] for store in summaries), Decimal("0"))
+        total_transaction = sum(
+            (store["transaction_total"] for store in summaries), Decimal("0")
+        )
+        total_debt = sum((store["debt"] for store in summaries), Decimal("0"))
 
         context.update(
             {
@@ -346,6 +447,8 @@ class SummaryViewMixin:
         return context
 
 
+@cached_view
+@cookie_vary_view
 class SummaryDetailView(
     SummaryViewMixin,
     LoginRequiredMixin,
@@ -354,6 +457,8 @@ class SummaryDetailView(
     model = Summary
 
 
+@cached_view
+@cookie_vary_view
 class SummaryPrintView(
     SummaryViewMixin,
     LoginRequiredMixin,
@@ -399,6 +504,8 @@ class ActDeleteView(
     success_url = reverse_lazy("acts:act_list")
 
 
+@cached_view
+@cookie_vary_view
 class ActListView(
     LoginRequiredMixin,
     ListMixin,
@@ -406,6 +513,9 @@ class ActListView(
 ):
     model = Act
     ordering = "-date"
+
+    def get_queryset(self):
+        return super().get_queryset().select_related("store")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -424,11 +534,14 @@ class ActListView(
 
 class ActViewMixin:
     model = Act
-    template_name = "act_detail.html"
+    template_name = "acts/act_detail.html"
     context_object_name = "act"
 
+    def get_queryset(self):
+        return super().get_queryset().select_related("store")
+
     def get_context_data(self, **kwargs):
-        act = self.get_object()
+        act = getattr(self, "object", None) or self.get_object()
         calculator = DebtCalculator(act.store, act.period_start, act.period_end)
         context = super().get_context_data(**kwargs)
         result = calculator.calculate()
@@ -447,11 +560,15 @@ class ActViewMixin:
         return context
 
 
+@cached_view
+@cookie_vary_view
 class ActDetailView(ActViewMixin, LoginRequiredMixin, DetailView):
     model = Act
     template_name = "acts/act_detail.html"
 
 
+@cached_view
+@cookie_vary_view
 class ActPrintView(ActViewMixin, LoginRequiredMixin, DetailView):
     model = Act
     template_name = "acts/act_print.html"

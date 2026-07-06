@@ -20,6 +20,10 @@ COPY . .
 
 RUN python manage.py collectstatic --noinput --clear
 
+FROM builder AS migrate
+
+CMD ["python", "manage.py", "migrate", "--noinput"]
+
 FROM base AS runtime
 
 COPY --from=builder /opt/venv /opt/venv
@@ -28,7 +32,3 @@ COPY --from=builder /app /app
 EXPOSE 8000
 
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "reconciliation.wsgi:application"]
-
-FROM runtime AS migrate
-
-CMD ["python", "manage.py", "migrate", "--noinput"]

@@ -1,8 +1,20 @@
+import re
+
 import pytz
+from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.db import models
 
 User = get_user_model()
+
+
+def validate_phone_number(value):
+    if not value:
+        return
+
+    normalized = re.sub(r"[\s()+-]", "", value)
+    if not normalized.isdigit() or not 7 <= len(normalized) <= 15:
+        raise ValidationError("Введите корректный номер телефона")
 
 
 class Store(models.Model):
@@ -11,9 +23,11 @@ class Store(models.Model):
         max_length=264, verbose_name="Адрес", null=True, blank=True
     )
     phone_number = models.CharField(
+        max_length=32,
+        validators=[validate_phone_number],
         verbose_name="Номер телефона", null=True, blank=True
     )
-    notes = models.CharField(verbose_name="Заметки", null=True, blank=True)
+    notes = models.TextField(verbose_name="Заметки", null=True, blank=True)
 
     class Meta:
         verbose_name = "клиент"

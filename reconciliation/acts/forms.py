@@ -1,4 +1,5 @@
 import re
+from decimal import Decimal
 from datetime import date
 
 from django import forms
@@ -8,6 +9,7 @@ from django.forms import ValidationError
 from .models import Act, Store, Summary, Supply, Transaction
 
 User = get_user_model()
+MIN_ALLOWED_DATE = date(2000, 1, 1)
 
 
 class StoreForm(forms.ModelForm):
@@ -31,10 +33,39 @@ class StoreForm(forms.ModelForm):
                     "placeholder": "+7 (XXX) XXX-XX-XX (не обязательно)",
                 }
             ),
-            "notes": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "не обязательно"}
+            "notes": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "не обязательно",
+                    "rows": 3,
+                }
             ),
         }
+
+    def clean_name(self):
+        name = (self.cleaned_data.get("name") or "").strip()
+        if not name:
+            raise ValidationError("Укажите название")
+        return name
+
+    def clean_address(self):
+        address = (self.cleaned_data.get("address") or "").strip()
+        return address or None
+
+    def clean_phone_number(self):
+        phone_number = (self.cleaned_data.get("phone_number") or "").strip()
+        if not phone_number:
+            return None
+
+        normalized = re.sub(r"[\s()+-]", "", phone_number)
+        if not normalized.isdigit() or not 7 <= len(normalized) <= 15:
+            raise ValidationError("Введите корректный номер телефона")
+
+        return phone_number
+
+    def clean_notes(self):
+        notes = (self.cleaned_data.get("notes") or "").strip()
+        return notes or None
 
 
 class TransactionForm(forms.ModelForm):
@@ -68,9 +99,9 @@ class TransactionForm(forms.ModelForm):
         price = self.cleaned_data.get("price")
         if price is None:
             raise ValidationError("Укажите сумму")
-        if price <= 0:
+        if price <= Decimal("0"):
             raise ValidationError("Сумма должна быть положительной")
-        if price > 1_000_000:
+        if price > Decimal("1000000"):
             raise ValidationError("Сумма не может превышать 1 000 000 ₽")
         return price
 
@@ -80,19 +111,12 @@ class TransactionForm(forms.ModelForm):
             raise ValidationError("Укажите дату")
         if transaction_date > date.today():
             raise ValidationError("Дата не может быть в будущем")
-        if transaction_date < date(2000, 1, 1):
+        if transaction_date < MIN_ALLOWED_DATE:
             raise ValidationError("Дата не может быть раньше 2000 года")
         return transaction_date
 
     def clean(self):
-        cleaned_data = super().clean()
-        store = cleaned_data.get("store")
-        cleaned_data.get("date")
-
-        if store and not Store.objects.filter(id=store.id).exists():
-            raise ValidationError("Выбранный магазин не существует")
-
-        return cleaned_data
+        return super().clean()
 
 
 class SupplyForm(forms.ModelForm):
@@ -126,16 +150,18 @@ class SupplyForm(forms.ModelForm):
         }
 
     def clean_id(self):
-        supply_id = self.cleaned_data.get("id")
+        supply_id = (self.cleaned_data.get("id") or "").strip().upper()
         if not supply_id:
             raise ValidationError("Номер поставки обязателен")
 
         if not re.match(r"^[A-Z0-9-]+$", supply_id):
             raise ValidationError("ID может содержать только буквы, цифры и дефис")
 
-        if not self.instance.pk:
-            if Supply.objects.filter(id=supply_id).exists():
-                raise ValidationError("Поставка с таким номером уже существует")
+        queryset = Supply.objects.filter(id=supply_id)
+        if self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise ValidationError("Поставка с таким номером уже существует")
 
         return supply_id
 
@@ -143,9 +169,9 @@ class SupplyForm(forms.ModelForm):
         price = self.cleaned_data.get("price")
         if price is None:
             raise ValidationError("Укажите сумму")
-        if price <= 0:
+        if price <= Decimal("0"):
             raise ValidationError("Сумма должна быть положительной")
-        if price > 10_000_000:
+        if price > Decimal("10000000"):
             raise ValidationError("Слишком большая сумма")
         return price
 
@@ -155,6 +181,8 @@ class SupplyForm(forms.ModelForm):
             raise ValidationError("Укажите дату")
         if supply_date > date.today():
             raise ValidationError("Дата не может быть в будущем")
+        if supply_date < MIN_ALLOWED_DATE:
+            raise ValidationError("Дата не может быть раньше 2000 года")
         return supply_date
 
 
@@ -176,6 +204,30 @@ class SummaryForm(forms.ModelForm):
                 }
             ),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        stores = cleaned_data.get("stores")
+        period_start = cleaned_data.get("period_start")
+        period_end = cleaned_data.get("period_end")
+
+        if not stores:
+            raise ValidationError("Выберите хотя бы один магазин")
+
+        if period_start and period_end:
+            if period_start > period_end:
+                raise ValidationError("Дата начала не может быть позже даты окончания")
+
+            if period_start < MIN_ALLOWED_DATE:
+                raise ValidationError("Слишком ранняя дата начала")
+
+            if period_end > date.today():
+                raise ValidationError("Дата окончания не может быть в будущем")
+
+            if (period_end - period_start).days > 365:
+                raise ValidationError("Период не может превышать 365 дней")
+
+        return cleaned_data
 
 
 class ActForm(forms.ModelForm):
@@ -206,12 +258,16 @@ class ActForm(forms.ModelForm):
         cleaned_data = super().clean()
         start = cleaned_data.get("period_start")
         end = cleaned_data.get("period_end")
+        store = cleaned_data.get("store")
+
+        if not store:
+            raise ValidationError("Выберите магазин")
 
         if start and end:
             if start > end:
                 raise ValidationError("Дата начала не может быть позже даты окончания")
 
-            if start < date(2000, 1, 1):
+            if start < MIN_ALLOWED_DATE:
                 raise ValidationError("Слишком ранняя дата начала")
 
             if end > date.today():

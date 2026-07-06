@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='store',
             name='notes',
-            field=models.CharField(blank=True, null=True, verbose_name='Заметки'),
+            field=models.TextField(blank=True, null=True, verbose_name='Заметки'),
         ),
     ]

@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=64, verbose_name='Название')),
                 ('address', models.CharField(blank=True, max_length=264, null=True, verbose_name='Адрес')),
-                ('phone_number', models.CharField(blank=True, null=True, verbose_name='Номер телефона')),
+                ('phone_number', models.CharField(blank=True, max_length=32, null=True, verbose_name='Номер телефона')),
             ],
             options={
                 'verbose_name': 'магазин',

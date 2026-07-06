@@ -39,11 +39,10 @@
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <div
-                        class="card h-100 {% if store.debt > 0 %}border-danger{% elif store.debt < 0 %}border-success{% endif %}">
+                        class="card h-100 {% if debt > 0 %}border-danger{% elif debt < 0 %}border-success{% endif %}">
                         <div class="card-body text-center">
                             <h6 class="card-title">Общий долг</h6>
-                            <h4
-                                class="card-text {% if store.debt > 0 %}text-danger{% elif store.debt < 0 %}text-success{% endif %}">
+                            <h4 class="card-text {% if debt > 0 %}text-danger{% elif debt < 0 %}text-success{% endif %}">
                                 {{ debt|default:0|floatformat:2 }} руб.
                             </h4>
                         </div>
@@ -75,14 +74,14 @@
         </div>
     </div>
 
-    {% if store.supply.exists %}
+    {% if supplies %}
     <div class="card">
         <div class="card-header bg-light">
             <h5 class="mb-0">Поставки</h5>
         </div>
         <div class="card-body">
             <div class="list-group">
-                {% for supply in store.supply.all %}
+                {% for supply in supplies %}
                 <a href="{% url 'acts:supply_detail' supply.pk %}" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between align-items-center">
                         <div>
@@ -105,14 +104,14 @@
     </div>
     {% endif %}
     <p></p>
-    {% if store.transaction.exists %}
+    {% if transactions %}
     <div class="card">
         <div class="card-header bg-light">
             <h5 class="mb-0">Поступления средств</h5>
         </div>
         <div class="card-body">
             <div class="list-group">
-                {% for transaction in store.transaction.all %}
+                {% for transaction in transactions %}
                 <a href="{% url 'acts:transaction_detail' transaction.pk %}"
                     class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between align-items-center">
@@ -136,17 +135,17 @@
     </div>
     {% endif %}
     <p></p>
-    {% if store.summary_set.exists %}
+    {% if summaries %}
     <div class="card">
         <div class="card-header bg-light">
             <h5 class="mb-0">Акты сверки</h5>
         </div>
         <div class="card-body">
             <div class="list-group">
-                {% for summary in store.summary_set.all %}
+                {% for summary in summaries %}
                 <a href="{% url 'acts:summary_detail' summary.pk %}" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
-                        <h6 class="mb-1">Акт №{{ summary.number }}</h6>
+                        <h6 class="mb-1">Акт №{{ summary.id }}</h6>
                         <small>{{ summary.date }}</small>
                     </div>
                 </a>

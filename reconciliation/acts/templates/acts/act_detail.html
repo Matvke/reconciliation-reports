@@ -132,9 +132,9 @@
                             </td>
                             <td>
                                 {% if event.type == 'supply' %}
-                                Поставка №{{ event.supply.id }}
+                                Поставка №{{ event.event.id }}
                                 {% else %}
-                                Платеж от {{ event.transaction.date|date:"d.m.Y" }}
+                                Платеж от {{ event.event.date|date:"d.m.Y" }}
                                 {% endif %}
                                 <a href="{% if event.type == 'supply' %}{% url 'acts:supply_detail' event.event.pk %}{% elif event.type == 'transaction' %}{% url 'acts:transaction_detail' event.event.pk %}{% endif %}"
                                     class="stretched-link"></a>

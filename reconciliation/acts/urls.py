@@ -7,6 +7,7 @@ from .views import (
     ActListView,
     ActPrintView,
     ActUpdateView,
+    HealthCheckView,
     HomePage,
     StoreCreateView,
     StoreDeleteView,
@@ -34,6 +35,7 @@ from .views import (
 app_name = "acts"
 
 urlpatterns = [
+    path("healthz/", HealthCheckView.as_view(), name="healthz"),
     path("", HomePage.as_view(), name="home"),
     # acts
     path("act_list", ActListView.as_view(), name="act_list"),

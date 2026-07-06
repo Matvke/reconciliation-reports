@@ -20,6 +20,13 @@ def test_home_page(admin_client, fill_db):
     assert context["total_debt"] == 1
 
 
+def test_healthz_endpoint(client):
+    response = client.get(reverse("acts:healthz"))
+
+    assert response.status_code == 200
+    assert response.content == b"ok"
+
+
 def test_home_page_cache_is_invalidated_on_write(admin_client, fill_db):
     url = reverse_lazy("acts:home")
     first_response = admin_client.get(url)

@@ -17,7 +17,8 @@ def url_names():
     for pattern in resolver.url_patterns:
         if pattern.app_name in app_names:
             for url in pattern.url_patterns:
-                names.append(f"{pattern.app_name}:{url.name}")
+                if url.name != "healthz":
+                    names.append(f"{pattern.app_name}:{url.name}")
     return names
 
 

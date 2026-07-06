@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponse
 from django.db.models import DecimalField, OuterRef, Prefetch, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 from django.urls import reverse_lazy
@@ -33,6 +34,12 @@ User = get_user_model()
 
 cached_view = method_decorator(cache_page(300), name="dispatch")
 cookie_vary_view = method_decorator(vary_on_cookie, name="dispatch")
+
+
+class HealthCheckView(TemplateView):
+    def get(self, request, *args, **kwargs):
+        return HttpResponse("ok", content_type="text/plain")
+
 
 @cached_view
 @cookie_vary_view

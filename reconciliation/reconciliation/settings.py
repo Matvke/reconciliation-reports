@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from tempfile import gettempdir
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
@@ -55,13 +56,32 @@ WSGI_APPLICATION = "reconciliation.wsgi.application"
 if DEBUG:
     DATA_DIR = BASE_DIR
 else:
-    default_data_dir = BASE_DIR / "data"
-    DATA_DIR = Path(os.environ.get("DATA_DIR", default_data_dir))
-    try:
-        os.makedirs(DATA_DIR, exist_ok=True)
-    except OSError:
-        DATA_DIR = default_data_dir
-        os.makedirs(DATA_DIR, exist_ok=True)
+    def _pick_data_dir() -> Path:
+        candidates = []
+        env_data_dir = os.getenv("DATA_DIR")
+        if env_data_dir:
+            candidates.append(Path(env_data_dir))
+        candidates.extend(
+            [
+                Path("/app/data"),
+                BASE_DIR / "data",
+                Path(gettempdir()) / "reconciliation-data",
+            ]
+        )
+
+        for path in candidates:
+            try:
+                path.mkdir(parents=True, exist_ok=True)
+                probe = path / ".write_test"
+                probe.write_text("ok", encoding="utf-8")
+                probe.unlink(missing_ok=True)
+                return path
+            except OSError:
+                continue
+
+        raise RuntimeError("No writable DATA_DIR candidate found")
+
+    DATA_DIR = _pick_data_dir()
 
 STATIC_ROOT = BASE_DIR / "static"
 STATIC_URL = "/static/"
